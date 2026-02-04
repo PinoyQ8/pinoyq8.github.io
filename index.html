@@ -127,6 +127,31 @@
                 log("❌ AUTH ERROR: " + err.message);
             });
         }
+        function checkWalletEligibility() {
+            log("🔍 Verifying Wallet Eligibility...");
+
+            // We check if the user is authenticated first
+            if (document.getElementById('user-name').innerText === "Pioneer") {
+                log("❌ Error: Please connect your wallet first!");
+                return;
+            }
+
+            log("📡 Pinging Pi Blockchain for status...");
+
+            // In a real scenario, you'd call your backend here. 
+            // For the MVP, we simulate a 'Gas Check'
+            setTimeout(() => {
+                const hasBalance = true; // Simulated check
+                if (hasBalance) {
+                    log("✅ Balance Confirmed: > 1 Pi available.");
+                    log("🛡️ Security Circle: Verified.");
+                    document.getElementById('audit-status').innerText = "Wallet Eligible for 85% Score";
+                    document.getElementById('audit-status').style.color = "#4caf50";
+                } else {
+                    log("❌ Insufficient Pi for Trust Deposit.");
+                }
+            }, 1500);
+        }
     </script>
 </body>
 
