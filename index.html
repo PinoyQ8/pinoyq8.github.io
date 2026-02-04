@@ -138,6 +138,39 @@
         } else {
             window.addEventListener('load', bootPi);
         }
+        function requestTrustPayment() {
+            log("💎 Opening Pi Wallet...");
+
+            Pi.createPayment({
+                amount: 1.0,
+                memo: "Trust Protocol Level 1 Audit Fee",
+                metadata: { auditType: "L1_Security" },
+            }, {
+                onReadyForServerApproval: function (paymentId) {
+                    log("📡 Payment Created. ID: " + paymentId);
+                    // In Sandbox, this is often auto-approved.
+                },
+                onReadyForServerCompletion: function (paymentId, txid) {
+                    log("✅ PAID! TXID: " + txid.substring(0, 10));
+                    // Trigger the audit animation now that they've paid
+                    startAudit();
+                    <div id="audit-box" class="card">
+                        <h3>Ready for Reputation Audit?</h3>
+                        <p>Fee: 1 Pi (Refundable Security Deposit)</p>
+
+                        <button class="btn btn-purple" onclick="requestTrustPayment()">
+                            Start Audit (1 Pi)
+                        </button>
+                    </div>
+                },
+                onCancel: function (paymentId) {
+                    log("⚠️ Payment Cancelled by user.");
+                },
+                onError: function (error, payment) {
+                    log("❌ Wallet Error: " + error.message);
+                }
+            });
+        }
     </script>
 </body>
 
