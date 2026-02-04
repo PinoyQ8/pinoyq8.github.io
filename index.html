@@ -1,76 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trust Bazaar - Emergency Reset</title>
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; background-color: #f0f0f0; }
-        #debug-window { 
-            background: #222; color: #0f0; padding: 15px; text-align: left; 
-            font-family: monospace; font-size: 12px; border-radius: 8px; 
-            min-height: 250px; overflow-y: auto; margin-top: 20px;
-        }
-        button { 
-            width: 100%; padding: 20px; font-size: 18px; font-weight: bold;
-            background-color: #fca900; border: none; border-radius: 10px; cursor: pointer;
-        }
-        .status-ok { color: #0f0; }
-        .status-err { color: #f00; }
-    </style>
-</head>
-<body>
-
-    <h2>🛠️ Diagnostic Mode</h2>
-    <p>If you see this, the HTML is working.</p>
-    
-    <button id="login-btn">TAP TO AUTHENTICATE</button>
-
-    <div id="debug-window">
-        <div>[SYSTEM]: Initializing...</div>
-    </div>
-
-    <script>
-        const debug = document.getElementById('debug-window');
-        function log(msg, color = "#0f0") {
-            debug.innerHTML += `<div style="color: ${color}">> ${msg}</div>`;
-            console.log(msg);
-        }
-
-        // 1. Check if SDK actually loaded
-        window.onload = function() {
-            log("Window loaded.");
-            if (typeof Pi === 'undefined') {
-                log("FATAL: Pi SDK not found! Check your internet or script tag.", "#f00");
-            } else {
-                log("Pi SDK detected successfully.");
-                try {
-                    // Try to init
-                    Pi.init({ version: "2.0" });
-                    log("Pi.init() executed.");
-                } catch (e) {
-                    log("Pi.init() Error: " + e.message, "#f00");
-                }
-            }
-        };
-
-        // 2. Login Logic
-        document.getElementById('login-btn').onclick = async function() {
-            log("Auth button tapped...");
-            try {
-                log("Requesting Pi.authenticate...");
-                const auth = await Pi.authenticate(['username', 'payments'], function(payment) {
-                    log("Incomplete payment check...");
-                    return true;
-                });
-                log("SUCCESS! User: " + auth.user.username);
-                alert("Hello " + auth.user.username);
-            } catch (err) {
-                log("AUTH ERROR: " + JSON.stringify(err), "#f00");
-                alert("Auth Error: " + err);
-            }
-        };
-    </script>
-</body>
-</html>
+async function payForScore() {
+    try {
+        const payment = await Pi.createPayment({
+            // The amount of Pi for the trust score
+            amount: 1.0, 
+            // A short memo the user sees in their wallet
+            memo: "Trust Bazaar: Unlock My Trust Score", 
+            // This is a unique ID for your records
+            metadata: { scoreType: "full_report" }, 
+        }, {
+            // This runs when the user hits "Confirm" in their wallet
+            onReadyForServerApproval: function(paymentId) {
+                log("Payment Pending... ID: " + paymentId);
+                // For Testnet, we tell Pi to "auto-complete" the transaction
+                // In a real app, your server would verify this.
+                axios.post('https://api.minepi.com/v2/payments/' + paymentId + '/complete');
+            },
+            onReadyForServerCompletion: function(paymentId, txid) {
+                log("✅ Payment Successful! TXID: " + txid);
+                showTrustScore(); // Your function to show the 85% score
+            },
+            onCancel: function(paymentId) { log("Payment Cancelled."); },
+            onError: function(error, payment) { log("Payment Error: " + error.message); }
+        });
+    } catch (err) {
+        log("Payment failed to start: " + err.message);
+    }
+}
