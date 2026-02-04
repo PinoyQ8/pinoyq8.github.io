@@ -106,12 +106,31 @@
         };
 
         function login() {
-            log("Auth clicked...");
-            Pi.authenticate(['username'], function (p) { }).then(function (auth) {
-                log("👋 Hello " + auth.user.username);
+            log("🚀 Wallet Connection Requested...");
+
+            // 1. Force a small vibration (S23 feedback)
+            if (window.navigator.vibrate) window.navigator.vibrate(50);
+
+            // 2. The Auth Call
+            Pi.authenticate(['username', 'payments'], function (payment) {
+                log("🔍 Background check for payments...");
+            }).then(function (auth) {
+                log("✅ WALLET CONNECTED!");
+                log("👋 Hello, " + auth.user.username);
+
+                // Update the UI
                 document.getElementById('user-name').innerText = auth.user.username;
+                document.getElementById('user-name').style.color = "#4caf50";
+
+                // Success animation
+                if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
+
             }).catch(function (err) {
-                log("❌ Auth Fail: " + err.message);
+                log("❌ WALLET ERROR: " + err.message);
+                // This is where we see the REAL reason the S23 is blocking you
+                if (err.message.includes("cancelled")) {
+                    log("💡 Tip: Don't close the popup too fast.");
+                }
             });
         }
     </script>
