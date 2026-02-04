@@ -2,35 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-async function payForScore() {
-    try {
-        const payment = await Pi.createPayment({
-            amount: 1.0,
-            memo: "Trust Bazaar: Unlock My Trust Score",
-            metadata: { scoreType: "full_report" },
-        }, {
-            // STEP 1: Server Approval
-            onReadyForServerApproval: function(paymentId) {
-                console.log("Payment ID created:", paymentId);
-                // ⚠️ NOTE: In a real app, you send this ID to YOUR server.
-                // YOUR server then calls Pi API to approve it.
-                log("Please approve payment in your wallet...");
-            },
-            // STEP 2: Blockchain Completion
-            onReadyForServerCompletion: function(paymentId, txid) {
-                console.log("User paid! Transaction ID:", txid);
-                log("✅ Success! Score Unlocking...");
-                
-                // For testing, we can trigger the UI update immediately
-                showTrustScore(); 
-            },
-            onCancel: function(paymentId) { log("Payment Cancelled."); },
-            onError: function(error, payment) { log("Error: " + error.message); }
-        });
-    } catch (err) {
-        log("Payment failed: " + err.message);
-    }
-}
-
-
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Bazaar</title>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+</head>
+<body style="text-align: center; font-family: sans-serif; padding: 50px;">
+    <h1>Trust Bazaar 10/10</h1>
+    <p>If you see this, the website is working!</p>
+    <button id="auth_btn" style="padding: 15px; background: #673ab7; color: white; border: none; border-radius: 8px;">Login to Pi</button>
+    <script>
+        Pi.init({ version: "2.0" });
+        document.getElementById('auth_btn').onclick = function() {
+            Pi.authenticate(['username'], function(p){}).then(function(auth){
+                alert("Hello " + auth.user.username);
+            });
+        };
+    </script>
+</body>
+</html>
