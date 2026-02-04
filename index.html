@@ -1,94 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Trust Bazaar - Security Audit</title>
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    <style>
-        :root {
-            --pi-purple: #673ab7;
-        }
-
-        body {
-            font-family: sans-serif;
-            background: #f4f7f6;
-            margin: 0;
-            text-align: center;
-        }
-
-        #loader-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--pi-purple);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #fff;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .card {
-            background: white;
-            margin: 20px;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-    </style>
-</head>
-
-<body>
-
-    <div id="loader-container">
-        <div class="spinner"></div>
-        <p style="color: white; margin-top: 15px;">Connecting to Pi Network...</p>
-    </div>
-
-    <div class="card">
-        <h1 style="color: var(--pi-purple);">Trust Bazaar v1.2</h1>
-        <p>User: <span id="user-name" style="font-weight: bold;">Not Connected</span></p>
-        
-        <button id="main-action-btn" onclick="requestTrustPayment()"
-            style="padding: 15px; width: 80%; background: var(--pi-purple); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer;">
-            Start Audit (1 Pi)
-        </button>
-
-        <p style="font-size: 12px; color: #888; margin-top: 10px;">Fee: 1 Test Pi (Refundable)</p>
-
-        <button style="background: transparent; color: #2196f3; border: none; font-size: 13px; text-decoration: underline; margin-top: 15px;" onclick="checkWalletEligibility()">
-            Refresh Identity Status
-        </button>
-    </div>
-
-    <div id="debug-box"
-        style="background: #000; color: #0f0; font-family: monospace; font-size: 11px; padding: 10px; height: 150px; overflow-y: auto; text-align: left; margin: 20px; border-radius: 5px;">
-        <b>SYSTEM LOGS:</b>
-        <div id="log-output"></div>
-    </div>
-
-    <script>
-        // 1. Mandatory Global Callback
+<script>
+        // 1. Mandatory Global Callback - CRITICAL FOR TIMEOUTS
         const onIncompletePaymentFound = (payment) => {
-            log("📡 Found incomplete payment: " + payment.identifier);
+            log("⚠️ Incomplete payment found. Resolving...");
+            // Automatically tries to complete any "stuck" payments
+            try {
+                Pi.payment.complete(payment.identifier);
+                log("✅ Ghost payment cleared.");
+            } catch(e) {
+                log("ℹ️ No stuck payments to clear.");
+            }
         };
 
         const log = (msg) => {
@@ -106,20 +26,17 @@
             setTimeout(() => {
                 const loader = document.getElementById('loader-container');
                 if (loader) loader.style.display = 'none';
-                log("⚠️ Failsafe active.");
             }, 5000);
 
             try {
-                log("🔗 Attempting SDK Init...");
+                log("🔗 Connecting to SDK...");
                 Pi.init({ version: "2.0" });
-                log("✅ SDK Connected.");
-
+                
                 Pi.authenticate(['username', 'payments'], onIncompletePaymentFound)
                     .then(function (auth) {
                         log("👤 Welcome, " + auth.user.username);
                         document.getElementById('user-name').innerText = auth.user.username;
-                        const loader = document.getElementById('loader-container');
-                        if (loader) loader.style.display = 'none';
+                        document.getElementById('loader-container').style.display = 'none';
                     })
                     .catch(function (err) {
                         log("❌ SDK Auth Error: " + err.message);
@@ -129,9 +46,9 @@
             }
         }
 
-        // 3. PI PAYMENT LOGIC (The Core Loop)
+        // 3. PI PAYMENT LOGIC (Updated for S23 Timeouts)
         function requestTrustPayment() {
-            log("💎 Opening Pi Wallet for 1 Pi...");
+            log("💎 Opening Wallet...");
 
             Pi.createPayment({
                 amount: 1.0,
@@ -139,17 +56,23 @@
                 metadata: { auditId: "TB-L1-AUDIT" },
             }, {
                 onReadyForServerApproval: function(paymentId) {
-                    log("📡 Payment Created. ID: " + paymentId);
+                    log("📡 Handshake Created: " + paymentId);
+                    // In a Sandbox/Front-end only app, we wait here.
+                    // If it stays "Preparing", ensure your Sandbox code matches S23.
+                    log("⏳ Waiting for Pi Server to Approve...");
                 },
                 onReadyForServerCompletion: function(paymentId, txid) {
-                    log("✅ PAYMENT VERIFIED! TX: " + txid.substring(0, 10));
-                    startAudit(); // <--- This triggers the scan animation!
+                    log("✅ PAYMENT VERIFIED!");
+                    log("🔗 TX: " + txid.substring(0, 10));
+                    startAudit(); 
                 },
                 onCancel: function(paymentId) {
                     log("⚠️ Payment Cancelled.");
                 },
                 onError: function(error, payment) {
                     log("❌ Wallet Error: " + error.message);
+                    // If timeout occurs, try to clear it
+                    if(payment) onIncompletePaymentFound(payment);
                 }
             });
         }
@@ -157,7 +80,6 @@
         // 4. AUDIT ANIMATION
         function startAudit() {
             log("🛡️ SECURITY SCAN INITIATED...");
-
             const card = document.querySelector('.card');
             card.innerHTML = `
                 <h2 style="color: var(--pi-purple);">Audit in Progress...</h2>
@@ -167,25 +89,15 @@
                 <p id="audit-status" style="font-style: italic; color: #666;">Analyzing wallet history...</p>
             `;
 
-            const statuses = [
-                "Analyzing wallet age...",
-                "Checking transaction velocity...",
-                "Verifying network contributions...",
-                "Calculating Trust Score..."
-            ];
-
+            const statuses = ["Analyzing age...", "Checking velocity...", "Verifying network...", "Calculating Score..."];
             let progress = 0;
             const interval = setInterval(() => {
                 progress += 5;
                 const bar = document.getElementById('audit-bar');
-                const statusText = document.getElementById('audit-status');
-
                 if (bar) bar.style.width = progress + "%";
-
                 if (progress % 25 === 0 && progress < 100) {
-                    statusText.innerText = statuses[progress / 25];
+                    document.getElementById('audit-status').innerText = statuses[progress / 25];
                 }
-
                 if (progress >= 100) {
                     clearInterval(interval);
                     showFinalResult();
@@ -203,7 +115,6 @@
                     <h3 style="margin-top: 0;">TRUST SCORE VERIFIED</h3>
                     <hr>
                     <p>User: <b>${currentUser || 'Pinoy'}</b></p>
-                    <p style="font-size: 12px; color: #999;">Audit ID: PI-${Math.floor(Math.random() * 1000000)}</p>
                     <button onclick="location.reload()" style="background: var(--pi-purple); color: white; border: none; padding: 10px 20px; border-radius: 5px; width: 100%; font-weight: bold; cursor: pointer;">Issue New Audit</button>
                 </div>
             `;
@@ -211,17 +122,10 @@
         }
 
         function checkWalletEligibility() {
-            log("🔍 Re-verifying identity...");
+            log("🔍 Refreshing Handshake...");
             startSystem();
         }
 
-        // Auto-run on load
-        if (document.readyState === "complete") {
-            startSystem();
-        } else {
-            window.addEventListener("load", startSystem);
-        }
+        if (document.readyState === "complete") { startSystem(); } 
+        else { window.addEventListener("load", startSystem); }
     </script>
-</body>
-
-</html>
