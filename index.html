@@ -83,69 +83,52 @@
     </div>
 
    <script>
-        // 1. MUST BE GLOBAL - The SDK looks for this immediately
-        const onIncompletePaymentFound = (payment) => {
-            console.log("Found incomplete payment", payment);
-        };
+        // 1. Mandatory Global Callback
+const onIncompletePaymentFound = (payment) => {
+    console.log("Incomplete payment found", payment);
+};
 
-        // 2. LOGGING TOOL
-        const log = (msg) => {
-            const output = document.getElementById('log-output');
-            if (output) {
-                output.innerHTML += `<div>> ${msg}</div>`;
-                output.scrollTop = output.scrollHeight;
-            }
-        };
+const log = (msg) => {
+    const output = document.getElementById('log-output');
+    if(output) {
+        output.innerHTML += `<div>> ${msg}</div>`;
+        output.scrollTop = output.scrollHeight;
+    }
+};
 
-        // 3. MAIN INITIALIZATION
-        window.onload = function () {
-            log("📡 System Booting...");
+// 2. The Bootloader
+function startSystem() {
+    log("📡 System Booting...");
 
-            // Failsafe: Hide purple screen after 5 seconds
-            setTimeout(() => {
-                const loader = document.getElementById('loader-container');
-                if (loader) loader.style.display = 'none';
-                log("⚠️ Failsafe Active.");
-            }, 5000);
+    // Remove the purple curtain after 4 seconds if SDK fails
+    setTimeout(() => {
+        const loader = document.getElementById('loader-container');
+        if (loader) loader.style.display = 'none';
+        log("⚠️ Failsafe: Bypassing loading screen.");
+    }, 4000);
 
-            try {
-                // Init SDK
-                Pi.init({ version: "2.0" });
-                log("✅ SDK Signal Received.");
+    try {
+        log("🔗 Attempting SDK Init...");
+        Pi.init({ version: "2.0" });
+        log("✅ SDK Found.");
 
-                // Authenticate - This is what shows 'Pinoy'
-                Pi.authenticate(['username', 'payments'], onIncompletePaymentFound)
-                    .then(function (auth) {
-                        log("👤 Verified: " + auth.user.username);
-                        document.getElementById('user-name').innerText = auth.user.username;
-                    })
-                    .catch(function (err) {
-                        log("❌ Auth Error: " + err.message);
-                    });
-
-            } catch (e) {
-                log("❌ SDK Error: " + e.message);
-            }
-        };
-
-        // 4. THE 1 PI PAYMENT FUNCTION
-        function requestTrustPayment() {
-            log("💎 Opening Wallet...");
-
-            Pi.createPayment({
-                amount: 1.0,
-                memo: "Trust Protocol L1 Audit Fee",
-                metadata: { auditId: "TB-101" },
-            }, {
-                onReadyForServerApproval: (id) => log("📡 Payment ID: " + id),
-                onReadyForServerCompletion: (id, txid) => {
-                    log("✅ PAID! TX: " + txid.substring(0, 10));
-                    startAudit(); // Triggers your 85% score animation
-                },
-                onCancel: (id) => log("⚠️ Cancelled."),
-                onError: (err) => log("❌ Wallet Error: " + err.message),
+        // This is the line that clears the "Waiting" status
+        Pi.authenticate(['username', 'payments'], onIncompletePaymentFound)
+            .then(function(auth) {
+                log("👤 Welcome, " + auth.user.username);
+                document.getElementById('user-name').innerText = auth.user.username;
+            })
+            .catch(function(err) {
+                log("❌ SDK Auth Error: " + err.message);
             });
-        }
+    } catch (e) {
+        log("❌ Fatal Error: " + e.message);
+    }
+}
+
+// Ensure it runs even if the browser is slow
+if (document.readyState === "complete") { startSystem(); } 
+else { window.addEventListener("load", startSystem); }
         <script>
 
     </body>
