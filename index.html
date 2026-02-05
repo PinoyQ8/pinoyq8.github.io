@@ -1,120 +1,157 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Trust Bazaar Debug</title>
+    <title>Trust Bazaar Market</title>
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <style>
-        body { background: #673ab7; color: white; font-family: sans-serif; text-align: center; padding-top: 30px; }
-        .box { background: white; color: black; margin: 15px; padding: 20px; border-radius: 10px; }
-        button { padding: 15px; width: 90%; border: none; border-radius: 5px; font-weight: bold; margin: 5px 0; cursor: pointer; }
-        .btn-pay { background: #4CAF50; color: white; font-size: 18px; }
-        .btn-reset { background: #ff9800; color: white; font-size: 14px; }
-        #logs { font-family: monospace; font-size: 11px; color: #00ff00; background: #000; padding: 10px; margin: 20px; height: 150px; overflow-y: auto; text-align: left; }
+        body { background: #f4f7f6; font-family: sans-serif; margin: 0; padding-bottom: 60px; }
+        
+        /* Header & Nav */
+        header { background: #673ab7; color: white; padding: 15px; text-align: center; position: sticky; top:0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .nav-bar { display: flex; justify-content: space-around; background: white; padding: 10px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #ddd; }
+        .nav-btn { background: none; border: none; font-size: 24px; color: #999; cursor: pointer; }
+        .nav-btn.active { color: #673ab7; }
+
+        /* Views */
+        .view { display: none; padding: 20px; animation: fade 0.3s; }
+        .view.active { display: block; }
+
+        /* Cards */
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .job-card { border-left: 5px solid #673ab7; }
+        
+        /* Buttons */
+        .btn-main { background: #673ab7; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn-action { background: #e1bee7; color: #4a148c; border: none; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; float: right; }
+
+        /* Input Form */
+        input, textarea { width: 90%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; display: block; }
+        
+        @keyframes fade { from { opacity:0; } to { opacity:1; } }
     </style>
 </head>
 <body>
 
-    <h2>Trust Bazaar V2</h2>
-    
-    <div class="box">
-        <p>User: <span id="user">Loading...</span></p>
-        <button class="btn-pay" onclick="payPi()">💎 Pay 1 Pi (Start Audit)</button>
-        <hr>
-        <button class="btn-reset" onclick="clearStuckPayments()">⚠️ Fix "Preparing" Timeout</button>
+    <header>
+        <h2 style="margin:0;">Trust Bazaar</h2>
+        <small id="username">Connecting...</small>
+    </header>
+
+    <div id="view-market" class="view active">
+        <h3>🔥 Hot Jobs</h3>
+        <div id="job-feed">
+            </div>
     </div>
 
-    <div id="logs"><b>> SYSTEM READY</b></div>
+    <div id="view-post" class="view">
+        <h3>📝 Create New Job</h3>
+        <div class="card">
+            <label>Job Title</label>
+            <input type="text" id="job-title" placeholder="e.g. Logo Design">
+            
+            <label>Price (Pi)</label>
+            <input type="number" id="job-price" placeholder="50">
+            
+            <label>Description</label>
+            <textarea id="job-desc" rows="3" placeholder="Describe the task..."></textarea>
+            
+            <button class="btn-main" onclick="postNewJob()">Publish Job</button>
+        </div>
+    </div>
+
+    <div id="view-profile" class="view">
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 50px;">🛡️</div>
+            <h1>88%</h1>
+            <p>Trust Score Verified</p>
+            <hr>
+            <p>Total Spent: <b id="spent">0 Pi</b></p>
+            <button class="btn-main" onclick="alert('Audit is up to date!')">Refresh Score</button>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <button class="nav-btn active" onclick="switchView('market')">🏠</button>
+        <button class="nav-btn" onclick="switchView('post')">➕</button>
+        <button class="nav-btn" onclick="switchView('profile')">👤</button>
+    </div>
 
     <script>
-        // --- 1. THE GATEKEEPER ---
-        let auditDone = false; // This variable locks the door after one certificate
+        // --- 1. SETUP & DATA ---
+        let myJobs = JSON.parse(localStorage.getItem('trustJobs')) || [
+            { title: "Website Audit", price: 100, user: "PiCoreTeam" },
+            { title: "Translate App", price: 25, user: "GlobalMod" }
+        ];
 
-        const log = (m) => { 
-            const d = document.getElementById('logs');
-            if(d) {
-                d.innerHTML += "<div>> " + m + "</div>"; 
-                d.scrollTop = d.scrollHeight;
-            }
+        // --- 2. SWITCH TABS ---
+        function switchView(viewName) {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            
+            // Show selected
+            document.getElementById('view-' + viewName).classList.add('active');
+            
+            // Update icons (Visual only logic)
+            if(viewName === 'market') renderFeed();
         }
 
-        function payPi() {
-            // Disable button immediately
-            const btn = document.querySelector('button');
-            if(btn) {
-                btn.disabled = true;
-                btn.innerText = "Processing...";
-                btn.style.background = "#999";
-            }
-
-            const uniqueID = "audit-" + Date.now();
-            log("💎 Starting Payment...");
-
-            Pi.createPayment({
-                amount: 1.0,
-                memo: "Trust Audit Fee",
-                metadata: { internalId: uniqueID } 
-            }, {
-                onReadyForServerApproval: function(paymentId) {
-                    log("⏳ Waiting for Server...");
-                    
-                    // SIMULATION: Force success after 3 seconds
-                    setTimeout(() => {
-                        // Pass a fake ID for the simulation
-                        onPaymentSuccess("SIMULATED-888");
-                    }, 3000);
-                },
-                onReadyForServerCompletion: function(paymentId, txid) {
-                    // If the real sandbox works, it might trigger this too
-                    onPaymentSuccess(txid);
-                },
-                onCancel: function() { log("⚠️ Cancelled."); },
-                onError: function(e) { log("❌ Error: " + e.message); }
+        // --- 3. RENDER FEED ---
+        function renderFeed() {
+            const feed = document.getElementById('job-feed');
+            feed.innerHTML = ""; // Clear list
+            
+            myJobs.forEach(job => {
+                const html = `
+                    <div class="card job-card">
+                        <button class="btn-action" onclick="apply('${job.title}')">APPLY</button>
+                        <h4 style="margin:0 0 5px 0;">${job.title}</h4>
+                        <div style="color:#673ab7; font-weight:bold;">${job.price} π</div>
+                        <small style="color:#888;">Posted by: ${job.user || 'Pinoy'}</small>
+                    </div>
+                `;
+                feed.innerHTML += html;
             });
         }
 
-        function onPaymentSuccess(txid) {
-            // --- 2. THE LOCK ---
-            // If we have already finished, STOP IMMEDIATELY.
-            if(auditDone === true) return; 
-            
-            // Otherwise, lock the door now.
-            auditDone = true; 
+        // --- 4. POST NEW JOB ---
+        function postNewJob() {
+            const title = document.getElementById('job-title').value;
+            const price = document.getElementById('job-price').value;
+            const user = document.getElementById('username').innerText;
 
-            // --- 3. THE WIPE ---
-            // Nuke the entire body content instantly
-            document.body.innerHTML = ""; 
-            document.body.style.background = "#ffffff"; 
+            if(!title || !price) return alert("Please fill all fields");
 
-            // --- 4. THE SINGLE CERTIFICATE ---
-            const cert = document.createElement('div');
-            cert.style = "text-align:center; padding:40px; font-family:sans-serif; animation: pop 0.5s ease; max-width: 400px; margin: 0 auto;";
-            cert.innerHTML = `
-                <div style="font-size:60px; margin-bottom:20px;">🛡️</div>
-                <h1 style="color:#4CAF50; font-size:50px; margin:0;">88%</h1>
-                <h2 style="color:#333; margin:10px 0;">TRUST VERIFIED</h2>
-                <div style="background:#f4f4f4; padding:15px; border-radius:10px; margin:20px 0;">
-                    <p style="margin:5px; font-weight:bold;">User: Pinoy</p>
-                    <p style="margin:5px; font-size:12px; color:#666;">ID: ${txid}</p>
-                </div>
-                <button onclick="location.reload()" style="padding:15px 30px; background:#673ab7; color:white; border:none; border-radius:5px; font-size:16px; cursor:pointer; margin-top:10px;">Done</button>
-            `;
+            // Add to list
+            myJobs.unshift({ title: title, price: price, user: user });
             
-            document.body.appendChild(cert);
+            // Save to phone memory (Simulated Database)
+            localStorage.setItem('trustJobs', JSON.stringify(myJobs));
             
-            if(navigator.vibrate) navigator.vibrate([100,50,100]);
+            // Clear inputs and go home
+            document.getElementById('job-title').value = "";
+            document.getElementById('job-price').value = "";
+            alert("✅ Job Posted Successfully!");
+            switchView('market');
         }
 
-        // Add Animation Style
-        const style = document.createElement('style');
-        style.innerHTML = `@keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }`;
-        document.head.appendChild(style);
+        // --- 5. APPLY ACTION ---
+        function apply(jobTitle) {
+            // Here you would normally trigger the 1 Pi payment flow!
+            if(confirm("Pay 1 Pi deposit to apply for: " + jobTitle + "?")) {
+                alert("💎 Deposit Paid! Employer notified.");
+            }
+        }
 
-        // Standard Init
+        // --- 6. PI SDK INIT ---
         window.onload = function() {
+            renderFeed(); // Load initial jobs
             try {
                 Pi.init({ version: "2.0" });
                 Pi.authenticate(['username', 'payments'], (p) => { Pi.payment.complete(p.identifier); })
-                    .then(auth => { if(document.getElementById('status')) document.getElementById('status').innerText = auth.user.username; });
+                    .then(auth => { 
+                        document.getElementById('username').innerText = auth.user.username; 
+                    });
             } catch(e) {}
         };
     </script>
