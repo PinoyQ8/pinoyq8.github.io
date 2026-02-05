@@ -1,84 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Trust Bazaar Reset</title>
+    <title>Trust Bazaar Debug</title>
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <style>
-        body { background: #673ab7; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        .box { background: white; color: black; margin: 20px; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        button { padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 80%; }
-        #logs { font-family: monospace; font-size: 11px; color: #00ff00; background: #000; padding: 10px; margin: 20px; height: 150px; overflow-y: auto; text-align: left; border-radius: 5px; }
+        body { background: #673ab7; color: white; font-family: sans-serif; text-align: center; padding-top: 30px; }
+        .box { background: white; color: black; margin: 15px; padding: 20px; border-radius: 10px; }
+        button { padding: 15px; width: 90%; border: none; border-radius: 5px; font-weight: bold; margin: 5px 0; cursor: pointer; }
+        .btn-pay { background: #4CAF50; color: white; font-size: 18px; }
+        .btn-reset { background: #ff9800; color: white; font-size: 14px; }
+        #logs { font-family: monospace; font-size: 11px; color: #00ff00; background: #000; padding: 10px; margin: 20px; height: 150px; overflow-y: auto; text-align: left; }
     </style>
 </head>
 <body>
 
-    <h1>Trust Bazaar Debug</h1>
-    <div class="box">
-        <p>Status: <span id="status" style="font-weight:bold;">Loading Pi SDK...</span></p>
-        <button onclick="payPi()">Test 1 Pi Payment</button>
-    </div>
+    <h2>Trust Bazaar V2</h2>
     
+    <div class="box">
+        <p>User: <span id="user">Loading...</span></p>
+        <button class="btn-pay" onclick="payPi()">💎 Pay 1 Pi (Start Audit)</button>
+        <hr>
+        <button class="btn-reset" onclick="clearStuckPayments()">⚠️ Fix "Preparing" Timeout</button>
+    </div>
+
     <div id="logs"><b>> SYSTEM READY</b></div>
 
     <script>
-        function log(m) { 
-            const out = document.getElementById('logs');
-            out.innerHTML += "<div>> " + m + "</div>"; 
-            out.scrollTop = out.scrollHeight;
+        const log = (m) => { 
+            const d = document.getElementById('logs');
+            d.innerHTML += "<div>> " + m + "</div>"; 
+            d.scrollTop = d.scrollHeight;
         }
 
-        // Handle stuck payments that cause the "Preparing" timeout
-        const onIncompletePaymentFound = (payment) => {
-            log("⚠️ Found unfinished payment: " + payment.identifier);
-            // In Sandbox, this tells the server to resolve the ghost transaction
-            Pi.payment.complete(payment.identifier);
-            log("✅ Requesting closure of stuck payment...");
-        };
+        // 1. CLEAR STUCK PAYMENTS (The Fix for Timeouts)
+        function clearStuckPayments() {
+            log("🧹 Scanning for stuck payments...");
+            const onIncomplete = (payment) => {
+                log("⚠️ Found stuck ID: " + payment.identifier);
+                Pi.payment.complete(payment.identifier)
+                    .then(() => log("✅ Cleared! Try paying again."))
+                    .catch((e) => log("❌ Clear failed: " + e.message));
+            };
+            // Trigger the check
+            Pi.authenticate(['username', 'payments'], onIncomplete).then(() => log("scan complete."));
+        }
 
+        // 2. START SYSTEM
         window.onload = function() {
-            log("Window loaded.");
             try {
                 Pi.init({ version: "2.0" });
-                log("SDK Init Success.");
-                
-                Pi.authenticate(['username', 'payments'], onIncompletePaymentFound)
-                    .then(function(auth) {
-                        document.getElementById('status').innerText = "Connected as " + auth.user.username;
-                        log("👤 Auth success: " + auth.user.username);
+                log("SDK Init.");
+                Pi.authenticate(['username', 'payments'], (p) => { log("Found incomplete: " + p.identifier); })
+                    .then(auth => {
+                        document.getElementById('user').innerText = auth.user.username;
+                        log("Signed in: " + auth.user.username);
                     })
-                    .catch(function(e) { 
-                        log("❌ Auth Error: " + e.message); 
-                    });
-            } catch(err) {
-                log("❌ Fatal: " + err.message);
-            }
+                    .catch(e => log("Auth Error: " + e.message));
+            } catch(e) { log("Fatal: " + e.message); }
         };
 
+        // 3. PAY (With Unique ID to prevent hangs)
         function payPi() {
-            log("💎 Attempting 1 Pi payment...");
-            
+            const uniqueID = "audit-" + Date.now(); // <--- THIS PREVENTS DUPLICATE HANGS
+            log("💎 Starting Payment: " + uniqueID);
+
             Pi.createPayment({
                 amount: 1.0,
-                memo: "Trust Audit Level 1",
-                metadata: { auditId: "trust-bazaar-test-" + Date.now() } // Unique ID prevents cache issues
+                memo: "Trust Audit Fee",
+                metadata: { internalId: uniqueID } 
             }, {
-                onReadyForServerApproval: function(paymentId) { 
-                    log("📡 Step 1: Payment Created.");
-                    log("🆔 ID: " + paymentId);
-                    log("⏳ WAITING: Look at your PC Sandbox for Approval!");
+                onReadyForServerApproval: function(paymentId) {
+                    log("📡 Payment ID: " + paymentId);
+                    log("⏳ WAITING FOR PC APPROVAL...");
+                    log("👉 Check your PC Screen now!");
                 },
-                onReadyForServerCompletion: function(paymentId, txid) { 
-                    log("✅ Step 2: Payment Verified!");
-                    log("🔗 TX: " + txid.substring(0, 10));
-                    alert("SUCCESS! Audit Complete. Score: 88%"); 
+                onReadyForServerCompletion: function(paymentId, txid) {
+                    log("✅ SUCCESS! TX: " + txid.substring(0,5));
+                    alert("Audit Complete! Score: 88%");
                 },
-                onCancel: function(paymentId) { 
-                    log("⚠️ Cancelled by User."); 
-                },
-                onError: function(e, payment) { 
-                    log("❌ Error: " + e.message);
-                    if (payment) log("ID involved: " + payment.identifier);
-                }
+                onCancel: function() { log("⚠️ Cancelled."); },
+                onError: function(e) { log("❌ Error: " + e.message); }
             });
         }
     </script>
