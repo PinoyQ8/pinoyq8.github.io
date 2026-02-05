@@ -1,83 +1,109 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Trust Bazaar Market</title>
+    <title>Trust Bazaar Ultimate</title>
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { background: #f4f7f6; font-family: sans-serif; margin: 0; padding-bottom: 60px; }
+        body { background: #f4f7f6; font-family: sans-serif; margin: 0; padding-bottom: 70px; -webkit-tap-highlight-color: transparent; }
         
-        /* Header */
-        header { background: #673ab7; color: white; padding: 15px; text-align: center; position: sticky; top:0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .nav-bar { display: flex; justify-content: space-around; background: white; padding: 10px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #ddd; }
-        .nav-btn { background: none; border: none; font-size: 24px; color: #999; cursor: pointer; }
-        .nav-btn.active { color: #673ab7; }
+        /* HEADER */
+        header { background: linear-gradient(135deg, #673ab7, #512da8); color: white; padding: 15px; text-align: center; position: sticky; top:0; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        
+        /* NAVIGATION */
+        .nav-bar { display: flex; justify-content: space-around; background: white; padding: 12px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #eee; z-index: 20; }
+        .nav-btn { background: none; border: none; font-size: 24px; color: #bbb; transition: 0.2s; }
+        .nav-btn.active { color: #673ab7; transform: scale(1.1); }
 
-        /* Views */
-        .view { display: none; padding: 20px; animation: fade 0.3s; }
+        /* VIEWS */
+        .view { display: none; padding: 15px; animation: fade 0.3s; }
         .view.active { display: block; }
 
-        /* Cards */
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .job-card { border-left: 5px solid #673ab7; }
+        /* CARDS */
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #f0f0f0; }
+        .job-card { border-left: 5px solid #673ab7; position: relative; }
         
-        /* Score Circle */
+        /* SCORE CIRCLE */
         .score-circle {
-            width: 120px; height: 120px; border-radius: 50%; border: 8px solid #ddd;
+            width: 130px; height: 130px; border-radius: 50%; border: 8px solid #ddd;
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto; font-size: 30px; font-weight: bold; color: #333;
-            transition: all 1s ease;
+            margin: 10px auto; font-size: 35px; font-weight: bold; color: #333;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+            transition: border-color 1s ease;
         }
 
-        .btn-main { background: #673ab7; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; width: 100%; margin-top: 10px; }
-        .btn-action { background: #e1bee7; color: #4a148c; border: none; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; float: right; }
-        input, textarea { width: 90%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; display: block; }
-        
-        @keyframes fade { from { opacity:0; } to { opacity:1; } }
+        /* BUTTONS */
+        .btn-main { background: #673ab7; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 16px; margin-top: 10px; }
+        .btn-action { background: #ede7f6; color: #673ab7; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 13px; float: right; }
+        .btn-action:active { background: #d1c4e9; }
+
+        /* FORMS */
+        input, textarea { width: 90%; padding: 15px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; background: #fafafa; display: block; }
+        input:focus, textarea:focus { outline: none; border-color: #673ab7; background: white; }
+
+        /* MODAL OVERLAY (The Certificate) */
+        #cert-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 999; text-align: center;
+            flex-direction: column; justify-content: center; align-items: center;
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .cert-box { background: white; padding: 30px; border-radius: 20px; width: 80%; max-width: 350px; border-top: 6px solid #4CAF50; }
+
+        @keyframes fade { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+        @keyframes pop { from { opacity:0; transform: scale(0.8); } to { opacity:1; transform: scale(1); } }
     </style>
 </head>
 <body>
 
     <header>
-        <h2 style="margin:0;">Trust Bazaar</h2>
-        <small id="username">Connecting...</small>
+        <h2 style="margin:0; font-weight: 800;">Trust Bazaar</h2>
+        <small id="username" style="opacity: 0.8;">Connecting...</small>
     </header>
 
     <div id="view-market" class="view active">
-        <h3>🔥 Job Feed</h3>
-        <p style="font-size:12px; color:#666;">Apply to jobs to increase your Trust Score!</p>
+        <h3 style="color:#444;">🔥 Active Jobs</h3>
         <div id="job-feed"></div>
     </div>
 
     <div id="view-post" class="view">
-        <h3>📝 Post a Job (+5% Score)</h3>
+        <h3 style="color:#444;">📝 Post New Job</h3>
         <div class="card">
-            <input type="text" id="job-title" placeholder="Job Title">
-            <input type="number" id="job-price" placeholder="Price (Pi)">
+            <p style="color:#666; font-size:13px; margin-top:0;">Posting boosts your Trust Score by 5%.</p>
+            <input type="text" id="job-title" placeholder="Job Title (e.g. Logo Design)">
+            <input type="number" id="job-price" placeholder="Budget (Pi)">
+            <textarea id="job-desc" rows="3" placeholder="Describe requirements..."></textarea>
             <button class="btn-main" onclick="postNewJob()">Publish Job</button>
         </div>
     </div>
 
     <div id="view-profile" class="view">
         <div class="card" style="text-align: center;">
-            <h3>Your Trust Score</h3>
-            
+            <h3 style="margin:0; color:#555;">Reputation Score</h3>
             <div id="score-ring" class="score-circle">
                 <span id="trust-score">--%</span>
             </div>
+            <p id="score-status" style="color:#673ab7; font-weight:bold; margin:0;">Analyzing...</p>
             
-            <p id="score-status" style="margin-top:10px; font-weight:bold; color:#673ab7;">Calculation Pending...</p>
-            <hr>
-            <div style="display:flex; justify-content:space-around;">
-                <div>
-                    <b>Jobs Posted</b>
-                    <div id="stat-posted">0</div>
-                </div>
-                <div>
-                    <b>Applied</b>
-                    <div id="stat-applied">0</div>
-                </div>
+            <div style="display:flex; justify-content:space-around; margin-top:25px; background:#f9f9f9; padding:15px; border-radius:10px;">
+                <div><div id="stat-posted" style="font-size:24px; font-weight:bold;">0</div><small>Posted</small></div>
+                <div style="border-right:1px solid #ddd;"></div>
+                <div><div id="stat-applied" style="font-size:24px; font-weight:bold;">0</div><small>Applied</small></div>
             </div>
-            <button class="btn-main" onclick="resetStats()" style="background:#ff5252; margin-top:20px;">Reset My Reputation</button>
+            
+            <button onclick="resetStats()" style="background:transparent; color:#ff5252; border:none; margin-top:15px; font-size:12px; text-decoration:underline;">Reset Data</button>
+        </div>
+    </div>
+
+    <div id="cert-overlay">
+        <div class="cert-box">
+            <div style="font-size:60px; margin-bottom:10px;">🛡️</div>
+            <h1 style="color:#4CAF50; margin:0;">PAYMENT SUCCESS</h1>
+            <p style="color:#666;">Trust Score Updated</p>
+            <div style="background:#f1f8e9; padding:10px; border-radius:8px; margin:15px 0; font-family:monospace;">
+                TX: <span id="cert-tx">...</span>
+            </div>
+            <button class="btn-main" onclick="closeCert()" style="margin:0; background:#4CAF50;">Continue</button>
         </div>
     </div>
 
@@ -88,94 +114,104 @@
     </div>
 
     <script>
-        // --- 1. DATABASE (Local Storage) ---
+        // --- 1. DATA STORE (LocalStorage) ---
         let myJobs = JSON.parse(localStorage.getItem('trustJobs')) || [
-            { title: "Website Audit", price: 100, user: "PiCoreTeam" }
+            { title: "Smart Contract Audit", price: 100, user: "CoreTeam" },
+            { title: "App Translation", price: 25, user: "Mod_Chris" }
         ];
         
-        // This holds your reputation stats
-        let userStats = JSON.parse(localStorage.getItem('trustStats')) || {
-            posted: 0,
-            applied: 0
-        };
+        let userStats = JSON.parse(localStorage.getItem('trustStats')) || { posted: 0, applied: 0 };
 
-        // --- 2. THE SCORING LOGIC ---
-        function updateScore() {
-            // Base score for simply having an account
-            let score = 60; 
-            
-            // Add points for actions
-            score += (userStats.posted * 5);  // 5% per job posted
-            score += (userStats.applied * 2); // 2% per job applied
-            
-            // Cap at 100%
-            if (score > 100) score = 100;
+        // --- 2. PAYMENT ENGINE (The Real Logic) ---
+        function payPi(amount, memo, onSuccess) {
+            const uniqueID = "tx-" + Date.now();
+            console.log("💎 Paying " + amount + " Pi for " + memo);
 
-            // Update UI
-            document.getElementById('trust-score').innerText = score + "%";
-            document.getElementById('stat-posted').innerText = userStats.posted;
-            document.getElementById('stat-applied').innerText = userStats.applied;
-
-            // Update Ring Color based on score
-            const ring = document.getElementById('score-ring');
-            if(score < 70) ring.style.borderColor = "#ff9800"; // Orange
-            else if(score < 90) ring.style.borderColor = "#2196f3"; // Blue
-            else ring.style.borderColor = "#4caf50"; // Green for Verified
-            
-            document.getElementById('score-status').innerText = score >= 90 ? "🌟 VERIFIED PIONEER" : "Member";
+            Pi.createPayment({
+                amount: amount,
+                memo: memo,
+                metadata: { internalId: uniqueID } 
+            }, {
+                onReadyForServerApproval: function(paymentId) {
+                    console.log("Waiting for approval...");
+                    // SIMULATION BYPASS for GitHub Pages
+                    setTimeout(() => {
+                        onSuccess("SIMULATED-" + paymentId.substring(0,8));
+                    }, 3000);
+                },
+                onReadyForServerCompletion: function(paymentId, txid) {
+                    onSuccess(txid);
+                },
+                onCancel: function() { alert("Payment Cancelled"); },
+                onError: function(e) { console.log(e); }
+            });
         }
 
-        // --- 3. ACTIONS ---
+        // --- 3. MARKET ACTIONS ---
+        function apply(jobTitle) {
+            if(confirm("Pay 1 Pi Deposit to apply for: " + jobTitle + "?")) {
+                // Call the Payment Engine
+                payPi(1.0, "Apply: " + jobTitle, (txid) => {
+                    // ON SUCCESS:
+                    userStats.applied += 1;
+                    saveData();
+                    showCert(txid); // Show the fancy certificate
+                });
+            }
+        }
+
         function postNewJob() {
             const title = document.getElementById('job-title').value;
             const price = document.getElementById('job-price').value;
             const user = document.getElementById('username').innerText;
 
-            if(!title || !price) return alert("Fill all fields");
+            if(!title || !price) return alert("Please fill all fields");
 
             myJobs.unshift({ title: title, price: price, user: user });
-            localStorage.setItem('trustJobs', JSON.stringify(myJobs));
-            
-            // INCREASE STATS
             userStats.posted += 1;
-            saveStats();
+            saveData();
 
-            alert("✅ Job Posted! Trust Score +5%");
+            alert("✅ Job Posted! (+5% Trust)");
             document.getElementById('job-title').value = "";
             document.getElementById('job-price').value = "";
             switchView('market');
         }
 
-        function apply(title) {
-            if(confirm("Apply for " + title + "? (Simulated 1 Pi Payment)")) {
-                // INCREASE STATS
-                userStats.applied += 1;
-                saveStats();
-                alert("🚀 Applied! Trust Score +2%");
-                // Here you would put the real payment code
-            }
+        // --- 4. SCORING ALGORITHM ---
+        function updateScore() {
+            let score = 60; // Base
+            score += (userStats.posted * 5);
+            score += (userStats.applied * 2);
+            if(score > 100) score = 100;
+
+            document.getElementById('trust-score').innerText = score + "%";
+            document.getElementById('stat-posted').innerText = userStats.posted;
+            document.getElementById('stat-applied').innerText = userStats.applied;
+
+            const ring = document.getElementById('score-ring');
+            if(score < 70) { ring.style.borderColor = "#ff9800"; document.getElementById('score-status').innerText = "Member"; }
+            else if(score < 90) { ring.style.borderColor = "#2196f3"; document.getElementById('score-status').innerText = "Established"; }
+            else { ring.style.borderColor = "#4CAF50"; document.getElementById('score-status').innerText = "🌟 VERIFIED"; }
         }
 
-        function saveStats() {
+        // --- 5. UTILS ---
+        function saveData() {
+            localStorage.setItem('trustJobs', JSON.stringify(myJobs));
             localStorage.setItem('trustStats', JSON.stringify(userStats));
+            updateScore();
         }
 
-        function resetStats() {
-            if(confirm("Reset your reputation to zero?")) {
-                userStats = { posted: 0, applied: 0 };
-                saveStats();
-                updateScore();
-            }
-        }
-
-        // --- 4. NAVIGATION ---
         function switchView(viewName) {
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + viewName).classList.add('active');
             
+            // Highlight icon
+            const btnIndex = ['market', 'post', 'profile'].indexOf(viewName);
+            document.querySelectorAll('.nav-btn')[btnIndex].classList.add('active');
+
             if(viewName === 'market') renderFeed();
-            if(viewName === 'profile') updateScore(); // Recalculate score when opening profile
+            if(viewName === 'profile') updateScore();
         }
 
         function renderFeed() {
@@ -185,15 +221,34 @@
                 feed.innerHTML += `
                     <div class="card job-card">
                         <button class="btn-action" onclick="apply('${job.title}')">APPLY</button>
-                        <h4>${job.title}</h4>
-                        <div style="color:#673ab7;">${job.price} π</div>
-                        <small>Posted by: ${job.user}</small>
+                        <h4 style="margin:0 0 5px 0;">${job.title}</h4>
+                        <div style="color:#673ab7; font-weight:bold;">${job.price} π</div>
+                        <small style="color:#888;">Posted by: ${job.user}</small>
                     </div>
                 `;
             });
         }
 
-        // --- 5. START ---
+        function showCert(txid) {
+            document.getElementById('cert-tx').innerText = txid;
+            document.getElementById('cert-overlay').style.display = 'flex';
+            if(navigator.vibrate) navigator.vibrate([50,50,50]);
+        }
+
+        function closeCert() {
+            document.getElementById('cert-overlay').style.display = 'none';
+            switchView('profile'); // Take them to profile to see new score
+        }
+
+        function resetStats() {
+            if(confirm("Reset all data?")) {
+                userStats = { posted: 0, applied: 0 };
+                saveData();
+                alert("Reset Complete.");
+            }
+        }
+
+        // --- 6. BOOTLOADER ---
         window.onload = function() {
             renderFeed();
             try {
