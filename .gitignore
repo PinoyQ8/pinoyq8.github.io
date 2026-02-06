@@ -1,0 +1,23 @@
+# --- Project Bazaar Shield ---
+
+# 1. Private Keys & Secrets (CRITICAL)
+.env
+keys.json
+secrets.js
+.secret/
+# If you have any file with your Stellar Secret Key, name it one of these!
+
+# 2. AI & Extension Clutter
+.gemini/
+.vscode/
+*.log
+npm-debug.log*
+
+# 3. System Garbage
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# 4. Dependencies
+node_modules/
+dist/
