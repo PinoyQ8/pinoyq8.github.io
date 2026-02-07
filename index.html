@@ -9,21 +9,25 @@
         updateUI();
         // Simulation: Hide "Loading" after 1.5 seconds
         setTimeout(() => {
-            document.getElementById('admin-display').innerText = "Admin: Verified (PinoyQ8)";
+            const adminDisp = document.getElementById('admin-display');
+            if(adminDisp) adminDisp.innerText = "Admin: Verified (PinoyQ8)";
         }, 1500);
     };
 
     function updateUI() {
-        // Update Gauge
+        // Update Gauge with S23 Performance smoothing
         const angle = trust * 3.6;
-        document.getElementById('trust-gauge').style.background = `conic-gradient(var(--gold) ${angle}deg, #333 0deg)`;
-        document.getElementById('ts-display').innerText = trust + "%";
+        const gauge = document.getElementById('trust-gauge');
+        if(gauge) gauge.style.background = `conic-gradient(var(--gold) ${angle}deg, #333 0deg)`;
+        
+        const tsDisp = document.getElementById('ts-display');
+        if(tsDisp) tsDisp.innerText = trust + "%";
 
         // Update Bond Status text
         const bondText = document.getElementById('bond-text');
         const stakeBtn = document.getElementById('stake-btn');
         
-        if (isStaked) {
+        if (isStaked && bondText && stakeBtn) {
             bondText.innerText = "● SECURE";
             bondText.style.color = "var(--green)";
             stakeBtn.innerText = "✅ BOND ACTIVE";
@@ -32,18 +36,20 @@
         }
     }
 
-    // 2. Connect Wallet Simulation
+    // 2. Connect Wallet Simulation (FIXED POPUP)
     function connectWallet() {
         const btn = document.getElementById('connect-btn');
-        btn.innerText = "⏳ CONNECTING...";
+        btn.innerText = "⏳ WAIT...";
         
         setTimeout(() => {
             isConnected = true;
-            btn.innerText = "🟢 G...P8Q8"; // PinoyQ8 simulated address
+            btn.innerText = "🟢 PINOYQ8"; 
             btn.style.borderColor = "var(--green)";
             btn.style.color = "var(--green)";
+            
+            // CRITICAL FIX: Triggering the Modal display
             showModal("WALLET CONNECTED", "Merchant Wallet G...P8Q8 is now linked to Project Bazaar.");
-        }, 1200);
+        }, 800);
     }
 
     // 3. Stake Bond Simulation
@@ -57,18 +63,20 @@
         
         // Add a "Proceed" button to the modal for the demo
         const modalBox = document.querySelector('.modal-box');
-        const proceedBtn = document.createElement('button');
-        proceedBtn.className = 'btn';
-        proceedBtn.innerText = "CONFIRM 20 PI";
-        proceedBtn.style.marginTop = "10px";
-        proceedBtn.onclick = () => {
-            isStaked = true;
-            trust += 10;
-            updateUI();
-            closeModal();
-            proceedBtn.remove(); // Cleanup
-        };
-        modalBox.appendChild(proceedBtn);
+        if (modalBox && !document.getElementById('confirm-action-btn')) {
+            const proceedBtn = document.createElement('button');
+            proceedBtn.id = "confirm-action-btn";
+            proceedBtn.className = 'btn';
+            proceedBtn.innerText = "CONFIRM 20 PI";
+            proceedBtn.style.marginTop = "10px";
+            proceedBtn.onclick = () => {
+                isStaked = true;
+                trust += 10;
+                updateUI();
+                closeModal();
+            };
+            modalBox.appendChild(proceedBtn);
+        }
     }
 
     function simulateTrade() {
@@ -79,17 +87,25 @@
         }
     }
 
-    // --- UI HELPERS ---
+    // --- UI HELPERS (Z-INDEX FIXED) ---
     function showModal(title, msg) {
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-message').innerText = msg;
-        document.getElementById('custom-modal-overlay').style.display = 'flex';
+        const overlay = document.getElementById('custom-modal-overlay');
+        const mTitle = document.getElementById('modal-title');
+        const mMsg = document.getElementById('modal-message');
+        
+        if(overlay && mTitle && mMsg) {
+            mTitle.innerText = title;
+            mMsg.innerText = msg;
+            overlay.style.display = 'flex'; // This brings the hidden modal to life
+        }
     }
 
     function closeModal() {
-        document.getElementById('custom-modal-overlay').style.display = 'none';
-        // Remove any temporary confirm buttons added during stakeBond
-        const confirmBtn = document.querySelector('.modal-box .btn:nth-of-type(2)');
+        const overlay = document.getElementById('custom-modal-overlay');
+        if(overlay) overlay.style.display = 'none';
+        
+        // Remove temporary confirm buttons
+        const confirmBtn = document.getElementById('confirm-action-btn');
         if (confirmBtn) confirmBtn.remove();
     }
 
@@ -99,6 +115,5 @@
 
     function switchView(view) {
         console.log("Navigating to: " + view);
-        // You can add logic here to hide/show different divs later
     }
 </script>
