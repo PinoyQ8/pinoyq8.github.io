@@ -16,7 +16,12 @@
         .gauge { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(var(--gold) 54deg, #333 0deg); margin: 15px auto; display: flex; align-items: center; justify-content: center; }
         .gauge-inner { width: 95px; height: 95px; background: var(--card); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
-        .btn { background: linear-gradient(to bottom, var(--gold), #b8860b); color: black; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        /* Shop Styles */
+        .shop-item { display: flex; justify-content: space-between; align-items: center; background: #252525; padding: 12px; border-radius: 10px; margin-top: 10px; border-left: 4px solid var(--gold); }
+        .shop-info { text-align: left; }
+        .shop-price { color: var(--gold); font-weight: bold; }
+
+        .btn { background: linear-gradient(to bottom, var(--gold), #b8860b); color: black; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .btn-outline { background: none; border: 2px solid var(--gold); color: var(--gold); }
 
         #custom-modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:1000; }
@@ -26,8 +31,8 @@
 <body>
 
     <div class="seal"><div class="pi">π</div></div>
-    <h2 style="color: var(--gold); margin: 5px 0;">MERCHANT COMMAND</h2>
-    <p id="admin" style="font-size: 0.8rem; color: #aaa;">Admin: Loading...</p>
+    <h2 style="color: var(--gold); margin: 5px 0;">BAZAAR COMMAND</h2>
+    <p id="admin" style="font-size: 0.8rem; color: #aaa;">Merchant: Loading...</p>
 
     <div class="card">
         <h3 style="margin: 0; color: var(--gold);">TRUST SCORE</h3>
@@ -41,16 +46,38 @@
     </div>
 
     <div class="card">
-        <h3 style="margin: 0; color: var(--gold);">PI BOND</h3>
+        <h3 style="margin: 0; color: var(--gold);">🛒 BAZAAR MARKET</h3>
+        
+        <div class="shop-item">
+            <div class="shop-info">
+                <div style="font-size: 0.9rem; font-weight: bold;">Verified Merchant Badge</div>
+                <div style="font-size: 0.7rem; color: #aaa;">Display checkmark on profile</div>
+            </div>
+            <div class="shop-price">50 Pi</div>
+            <button class="btn" style="width: auto; padding: 5px 10px; margin-top: 0;" onclick="buy('Badge')">BUY</button>
+        </div>
+
+        <div class="shop-item">
+            <div class="shop-info">
+                <div style="font-size: 0.9rem; font-weight: bold;">Priority Listing</div>
+                <div style="font-size: 0.7rem; color: #aaa;">Top of search for 30 days</div>
+            </div>
+            <div class="shop-price">20 Pi</div>
+            <button class="btn" style="width: auto; padding: 5px 10px; margin-top: 0;" onclick="buy('Listing')">BUY</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 style="margin: 0; color: var(--gold);">🛡️ SECURITY BOND</h3>
         <p style="font-size: 0.8rem;" id="status">● NOT STAKED</p>
-        <button class="btn" id="stake-btn" onclick="stake()">🔒 STAKE 20 PI</button>
+        <button class="btn" id="stake-btn" onclick="stake()">🔒 LOCK 20 PI BOND</button>
     </div>
 
     <div id="custom-modal-overlay">
         <div class="modal">
             <h3 id="m-title" style="color: var(--gold); margin-top: 0;"></h3>
             <p id="m-body" style="font-size: 0.9rem;"></p>
-            <button class="btn" onclick="closeM()">UNDERSTOOD</button>
+            <button class="btn" onclick="closeM()">CLOSE</button>
         </div>
     </div>
 
@@ -59,19 +86,27 @@
         let connected = false;
 
         window.onload = () => {
-            document.getElementById('admin').innerText = "Admin: PinoyQ8";
+            document.getElementById('admin').innerText = "Merchant: PinoyQ8 (Verified)";
         };
 
         function connect() {
             connected = true;
             document.getElementById('conn-btn').innerText = "🟢 PINOYQ8 LINKED";
             document.getElementById('conn-btn').style.color = "#4CAF50";
-            showM("CONNECTED", "Pi Wallet G...P8Q8 is now synced with Project Bazaar.");
+            showM("CONNECTED", "Pi Wallet G...P8Q8 is now synced.");
+        }
+
+        function buy(item) {
+            if(!connected) {
+                showM("STOP", "Please connect your wallet to use the Market.");
+                return;
+            }
+            showM("PURCHASED", "You have successfully bought the " + item + "!");
         }
 
         function stake() {
             if(!connected) {
-                showM("WAIT!", "Please connect your wallet first.");
+                showM("WAIT!", "Connect wallet first.");
                 return;
             }
             trust = 25;
@@ -81,7 +116,7 @@
             document.getElementById('status').style.color = "#4CAF50";
             document.getElementById('stake-btn').innerText = "✅ BOND ACTIVE";
             document.getElementById('stake-btn').style.opacity = "0.5";
-            showM("BOND ACTIVE", "20 Pi successfully locked. Your Trust Score has been boosted!");
+            showM("BOND ACTIVE", "20 Pi locked. Trust Score boosted!");
         }
 
         function showM(t, b) {
