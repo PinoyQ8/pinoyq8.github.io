@@ -1,108 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Project Bazaar | 2026 Elite</title>
     <style>
-        :root {
-            --gold: #FFD700;
-            --pi-purple: #612F74;
-            --bg: #121212;
-            --card: #1e1e1e;
-            --red: #ff4444;
-            --green: #4CAF50;
-            --blue: #3498db;
-        }
-
-        body {
-            background: var(--bg);
-            color: white;
-            font-family: sans-serif;
-            margin: 0;
-            padding: 10px;
-            text-align: center;
-            box-sizing: border-box;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .logo-container {
-            width: 85px; height: 85px; margin: 10px auto;
-            display: flex; align-items: center; justify-content: center;
-            animation: pulse 2s infinite ease-in-out;
-        }
-
-        .main-logo {
-            max-width: 100%; max-height: 100%; object-fit: contain;
-            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); filter: drop-shadow(0 0 5px var(--gold)); }
-            50% { transform: scale(1.05); filter: drop-shadow(0 0 12px var(--gold)); }
-            100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--gold)); }
-        }
-
-        .card {
-            background: var(--card); border: 1px solid #333; border-radius: 12px;
-            padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-            position: relative;
-        }
-
-        .gauge {
-            width: 100px; height: 100px; border-radius: 50%;
-            background: conic-gradient(var(--gold) 54deg, #333 0deg);
-            margin: 5px auto; display: flex; align-items: center; justify-content: center;
-            transition: all 0.5s ease;
-        }
-
-        .gauge-inner {
-            width: 75px; height: 75px; background: var(--card); border-radius: 50%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-
+        :root { --gold: #FFD700; --pi-purple: #612F74; --bg: #121212; --card: #1e1e1e; --red: #ff4444; --green: #4CAF50; --blue: #3498db; }
+        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; padding: 10px; text-align: center; box-sizing: border-box; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        .logo-container { width: 85px; height: 85px; margin: 10px auto; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite ease-in-out; }
+        .main-logo { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5)); }
+        @keyframes pulse { 0% { transform: scale(1); filter: drop-shadow(0 0 5px var(--gold)); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 12px var(--gold)); } 100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--gold)); } }
+        .card { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); position: relative; }
+        .gauge { width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(var(--gold) 54deg, #333 0deg); margin: 5px auto; display: flex; align-items: center; justify-content: center; transition: all 0.5s ease; }
+        .gauge-inner { width: 75px; height: 75px; background: var(--card); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-
-        .btn {
-            background: linear-gradient(to bottom, var(--gold), #b8860b);
-            color: black; border: none; padding: 12px; border-radius: 8px;
-            font-weight: bold; cursor: pointer; font-size: 0.75rem;
-            transition: transform 0.1s; -webkit-tap-highlight-color: transparent;
-        }
-
+        .btn { background: linear-gradient(to bottom, var(--gold), #b8860b); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.75rem; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; }
         .btn:active { transform: scale(0.96); opacity: 0.8; }
         .btn-blue { background: none; border: 1px solid var(--blue); color: var(--blue); }
         .btn-danger { background: none; border: 1px solid var(--red); color: var(--red); }
-
-        #custom-modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.95); display: none;
-            align-items: center; justify-content: center; z-index: 10000;
-        }
-
-        .modal {
-            background: var(--card); padding: 20px; border-radius: 15px;
-            border: 2px solid var(--gold); width: 280px; text-align: center;
-        }
-
-        .qr-container {
-            width: 160px; height: 160px; background: #333; margin: 15px auto;
-            border: 8px solid white; display: flex; align-items: center;
-            justify-content: center; position: relative;
-        }
-
+        #custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.95); display: none; align-items: center; justify-content: center; z-index: 10000; }
+        .modal { background: var(--card); padding: 20px; border-radius: 15px; border: 2px solid var(--gold); width: 280px; text-align: center; }
+        .qr-container { width: 160px; height: 160px; background: #333; margin: 15px auto; border: 8px solid white; display: flex; align-items: center; justify-content: center; position: relative; }
         .qr-container::before { content: "GENERATING..."; font-size: 10px; color: #666; position: absolute; }
         .qr-container img { width: 100%; display: block; position: relative; z-index: 2; }
     </style>
 </head>
-
 <body>
 
     <div class="logo-container">
-        <img src="logo.png" alt="Project Bazaar Logo" class="main-logo"
-            onerror="this.src='https://minepi.com/wp-content/uploads/2023/05/Pi-Network-Logo.png'">
+        <img src="logo.png" alt="Project Bazaar Logo" class="main-logo" onerror="this.src='https://minepi.com/wp-content/uploads/2023/05/Pi-Network-Logo.png'">
     </div>
 
     <h4 style="color: var(--gold); margin: 5px 0;">BAZAAR ELITE COMMAND</h4>
@@ -133,16 +59,4 @@
     </div>
 
     <div class="card" style="border: 1px solid var(--blue); background: rgba(52, 152, 219, 0.05);">
-        <h5 style="margin: 0 0 10px 0; color: var(--blue);">🛒 BUYER SIMULATOR</h5>
-        <p id="buyer-status" style="font-size: 0.6rem; color: #888; margin-bottom: 8px;">SIMULATION: ACTION AS CUSTOMER</p>
-        <div id="order-box" style="display:none; background: #252525; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-            <span style="font-size: 0.7rem; color: var(--gold); display: block; margin-bottom: 5px;">🛒 NEW ORDER: 10 PI PAID</span>
-            <button class="btn" style="padding: 8px; width: 100%; font-size: 0.6rem;" id="ship-btn">📦 SHIP ITEM NOW</button>
-        </div>
-        <button class="btn btn-blue" id="buy-sim-btn" style="width: 100%;">📱 SCAN & PAY 10 PI</button>
-    </div>
-
-    <div id="custom-modal-overlay">
-        <div class="modal">
-            <h3 id="m-title" style="color: var(--gold); margin-top: 0; font-size: 1rem;"></h3>
-            <div id="m
+        <h5 style="margin
