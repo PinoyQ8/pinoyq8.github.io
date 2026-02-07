@@ -6,7 +6,7 @@
     <title>Project Bazaar | 2026 Elite</title>
     <style>
         :root { --gold: #FFD700; --pi-purple: #612F74; --bg: #121212; --card: #1e1e1e; --red: #ff4444; --green: #4CAF50; --blue: #3498db; }
-        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; padding: 10px; text-align: center; box-sizing: border-box; }
+        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; padding: 10px; text-align: center; box-sizing: border-box; overflow-x: hidden; }
         
         .seal { width: 50px; height: 50px; background: var(--gold); border-radius: 50%; margin: 5px auto; display: flex; align-items: center; justify-content: center; border: 2px solid var(--pi-purple); }
         .pi { color: var(--pi-purple); font-size: 25px; font-weight: bold; }
@@ -20,9 +20,12 @@
         .btn-blue { background: none; border: 1px solid var(--blue); color: var(--blue); }
         .btn-danger { background: none; border: 1px solid var(--red); color: var(--red); }
 
-        #custom-modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:none; align-items:center; justify-content:center; z-index:1000; padding: 20px; box-sizing: border-box; }
-        .modal { background: var(--card); padding: 20px; border-radius: 15px; border: 2px solid var(--gold); width: 100%; max-width: 300px; }
-        .qr-mock { width: 150px; height: 150px; background: white; margin: 10px auto; display: flex; align-items: center; justify-content: center; border: 5px solid white; }
+        /* S23 MODAL FIX: Fixed dimensions to prevent white-screen crash */
+        #custom-modal-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); display:none; align-items:center; justify-content:center; z-index:10000; }
+        .modal { background: var(--card); padding: 20px; border-radius: 15px; border: 2px solid var(--gold); width: 280px; min-height: 200px; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        
+        .qr-container { width: 160px; height: 160px; background: white; margin: 15px auto; border: 8px solid white; display: flex; align-items: center; justify-content: center; }
+        .qr-container img { width: 100%; height: auto; display: block; }
     </style>
 </head>
 <body>
@@ -50,81 +53,4 @@
         </div>
     </div>
 
-    <div class="card">
-        <p style="font-size: 0.6rem; margin-bottom: 5px;" id="status">● SECURITY BOND: NOT STAKED</p>
-        <button class="btn" id="stake-btn" onclick="stake()">🔒 LOCK 20 PI BOND</button>
-    </div>
-
-    <div id="custom-modal-overlay">
-        <div class="modal">
-            <h3 id="m-title" style="color: var(--gold); margin-top: 0; font-size: 1rem;"></h3>
-            <div id="m-content"></div>
-            <button class="btn" style="margin-top: 15px;" onclick="closeM()">CLOSE</button>
-        </div>
-    </div>
-
-    <script>
-        let trust = 15;
-        let connected = false;
-
-        function updateUI() {
-            trust = Math.max(0, Math.min(100, trust));
-            const angle = trust * 3.6;
-            document.getElementById('gauge').style.background = `conic-gradient(var(--gold) ${angle}deg, #333 0deg)`;
-            document.getElementById('score').innerText = trust + "%";
-            
-            let label = "ITERANT";
-            if(trust >= 25) label = "PROVEN";
-            if(trust >= 50) label = "VERIFIED";
-            if(trust >= 85) label = "ELDER";
-            document.getElementById('tier-label').innerText = label;
-        }
-
-        function adjustTrust(amt, msg) {
-            if(!connected) { showM("STOP", "Connect wallet first."); return; }
-            trust += amt;
-            updateUI();
-            showM("REPUTATION", msg);
-        }
-
-        function genQR() {
-            if(!connected) { showM("STOP", "Connect wallet first."); return; }
-            const qrHtml = `<div class='qr-mock'><img src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=pi://pay/pinoyq8' style='width:100%'></div><p style='font-size:0.7rem'>Scan to pay Merchant PinoyQ8</p>`;
-            showM("QR INVOICE", qrHtml, true);
-        }
-
-        function freeze() {
-            if(!connected) { showM("STOP", "Connect wallet first."); return; }
-            showM("❄️ ACCOUNT FROZEN", "Emergency Freeze active. No Pi can leave this wallet until re-verified via Security Circle.");
-        }
-
-        function connect() {
-            connected = true;
-            document.getElementById('conn-btn').innerText = "🟢 PINOYQ8";
-            document.getElementById('conn-btn').style.color = "var(--green)";
-            showM("CONNECTED", "Wallet G...P8Q8 synced.");
-        }
-
-        function stake() {
-            if(!connected) { showM("WAIT!", "Connect wallet first."); return; }
-            trust += 10;
-            updateUI();
-            document.getElementById('status').innerText = "● SECURITY BOND: SECURE";
-            document.getElementById('status').style.color = "var(--green)";
-            document.getElementById('stake-btn').innerText = "✅ BOND ACTIVE";
-            document.getElementById('stake-btn').disabled = true;
-            showM("BOND ACTIVE", "20 Pi Locked. Trust Score Boosted!");
-        }
-
-        function showM(t, b, isHtml = false) {
-            document.getElementById('m-title').innerText = t;
-            const content = document.getElementById('m-content');
-            if(isHtml) content.innerHTML = b;
-            else content.innerText = b;
-            document.getElementById('custom-modal-overlay').style.display = 'flex';
-        }
-
-        function closeM() { document.getElementById('custom-modal-overlay').style.display = 'none'; }
-    </script>
-</body>
-</html>
+    <div class="
