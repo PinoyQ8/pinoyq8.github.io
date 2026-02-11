@@ -1,0 +1,12 @@
+[package]
+name = "project-bazaar"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+# Change this to point to the standard src folder
+path = "src/lib.rs"
+
+[dependencies]
+soroban-sdk = { version = "25.1.0", features = ["testutils"] }
+# Leave this empty for now to clear all external errors
