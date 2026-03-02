@@ -6,7 +6,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* MESH FORCE: Direct script injection to bypass Next.js export mines */}
         <script src="https://sdk.minepi.com/pi-sdk.js" defer></script>
