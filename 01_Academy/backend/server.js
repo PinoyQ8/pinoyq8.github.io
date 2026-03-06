@@ -9,12 +9,14 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const app = express();
-app.use(cors());
+
+// --- MESH SECURITY: CORS SHIELD ---
+app.use(cors()); 
 app.use(bodyParser.json());
 
 const PI_API_KEY = 'YOUR_SECRET_BAZAAR_API_KEY';
 const PI_API_URL = 'https://api.minepi.com/v2/payments';
-const ledgerPath = 'J:/Project-Bazaar/02_Mainnet/genesis_ledger.json';
+const ledgerPath = 'J:/Project-Bazaar/02_Registry/Genesis_Ledger.json'; 
 
 // --- MODULE 1: APPROVAL LOGIC ---
 async function approveBazaarPayment(paymentId) {
@@ -38,14 +40,35 @@ app.post('/approve-payment', async (req, res) => {
     else res.status(500).json({ error: "Approval Failed" });
 });
 
-// --- MODULE 3: LEDGER ENDPOINT (The fix is here - now outside the function) ---
+// --- MODULE 3: GENESIS STATUS (Fixes the 404 Error) ---
+app.get('/genesis-status', (req, res) => {
+    try {
+        const data = fs.readFileSync(ledgerPath, 'utf8');
+        const ledger = JSON.parse(data);
+        // Counting the length of the array in your J: Drive Ledger
+        res.status(200).json({ count: ledger.length });
+    } catch (err) {
+        console.error("[BAZAAR TECH] Ledger read failed", err);
+        res.status(200).json({ count: 0 }); // Fallback to 0 if file is missing
+    }
+});
+
+// --- MODULE 4: LEDGER COMPLETION ---
 app.post('/complete-handshake', (req, res) => {
     const { username, txid } = req.body;
     try {
-        const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
-        if (!ledger.pioneer_handshakes.find(p => p.username === username)) {
-            ledger.pioneer_handshakes.push({
-                username: username, txid: txid, timestamp: new Date().toISOString(), status: "VERIFIED"
+        let ledger = [];
+        if (fs.existsSync(ledgerPath)) {
+            ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
+        }
+        
+        // Prevent duplicates
+        if (!ledger.find(p => p.username === username)) {
+            ledger.push({
+                username: username, 
+                txid: txid, 
+                timestamp: new Date().toISOString(), 
+                status: "VERIFIED"
             });
             fs.writeFileSync(ledgerPath, JSON.stringify(ledger, null, 4));
             console.log(`[SYNC SUCCESS] Genesis Pioneer Verified: ${username}`);
@@ -58,4 +81,9 @@ app.post('/complete-handshake', (req, res) => {
     }
 });
 
-app.listen(3000, () => console.log("[SYNC SUCCESS] Bazaar Backend Live on Port 3000"));
+app.listen(3000, () => {
+    console.log("------------------------------------------");
+    console.log("[SYNC SUCCESS] Bazaar Backend Live on Port 3000");
+    console.log(`[LEDGER] Pointed to: ${ledgerPath}`);
+    console.log("------------------------------------------");
+});

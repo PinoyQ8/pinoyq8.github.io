@@ -2,119 +2,205 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bazaar Academy | Node Active</title>
+    <title>Bazaar Academy | MESH Terminal</title>
     <style>
-        /* MESH CSS: Stick Footer Logic */
+        :root {
+            --bazaar-green: #00ff41;
+            --bazaar-dim: #003b00;
+            --bazaar-bg: #050505;
+            --mesh-glow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        body {
+            background-color: var(--bazaar-bg);
+            color: var(--bazaar-green);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 120px;
+        }
+
+        .academy-vault {
+            width: 100%;
+            max-width: 900px;
+            border: 1px solid var(--bazaar-green);
+            padding: 30px;
+            box-shadow: var(--mesh-glow);
+            background: rgba(0, 59, 0, 0.05);
+            margin-top: 20px;
+        }
+
+        h1 {
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-shadow: var(--mesh-glow);
+            border-bottom: 2px solid var(--bazaar-green);
+            padding-bottom: 10px;
+        }
+
+        .status-header { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 20px; }
+
+        .gate-section {
+            border: 1px dashed var(--bazaar-green);
+            padding: 20px;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.5);
+        }
+
+        input[type="text"] {
+            background: #000;
+            border: 1px solid var(--bazaar-green);
+            color: var(--bazaar-green);
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            width: 280px;
+            outline: none;
+        }
+
+        button {
+            background: var(--bazaar-green);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover { background: #fff; box-shadow: 0 0 15px #fff; }
+
+        #meshTerminal, #searchOutput {
+            background: #000;
+            padding: 10px;
+            border-left: 3px solid var(--bazaar-green);
+            margin-top: 15px;
+            font-size: 0.85rem;
+            min-height: 1.2rem;
+        }
+
         footer {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            background: #0a0a0a;
-            border-top: 1px dashed #00ff41;
-            padding: 10px 20px;
+            background: #000;
+            border-top: 1px dashed var(--bazaar-green);
+            padding: 15px 20px;
             box-sizing: border-box;
+            text-align: center;
+            font-size: 0.8rem;
         }
-        body { padding-bottom: 100px; } /* Prevents content from being hidden by footer */
+
+        .blink { animation: blinker 2s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
-<body style='background:#0a0a0a; color:#00ff41; font-family:monospace; padding: 20px;'>
-    <h1>[BAZAAR ACADEMY] NODE ACTIVE</h1>
-    <p>> Domain: bazaaracademy7570.pinet.com</p>
-    <p>> Status: March 12 Ignition - <span style="color:#ffcc00;">T-Minus 10 Days</span></p>
-    <hr style="border: 1px solid #00ff41;">
-    
-    <div id="genesis-gate">
-        <p>> [GENESIS HUNT] ACTIVE: 0/5 PIONEERS VERIFIED</p>
-        <button onclick="pioneerHandshake()" style="background:#00ff41; color:#000; border:none; padding:10px; cursor:pointer; font-family:monospace; font-weight:bold;">
-            AUTHENTICATE PIONEER
+<body>
+
+    <div class="academy-vault">
+        <h1>[BAZAAR ACADEMY] NODE ACTIVE</h1>
+        
+        <div class="status-header">
+            <span>> Domain: bazaaracademy7570.pinet.com</span>
+            <span>> Status: March 12 Ignition - <span style="color:#ffcc00;" class="blink">T-Minus 10 Days</span></span>
+        </div>
+
+        <hr style="border: 0.5px solid var(--bazaar-green); margin: 20px 0;">
+
+        <div class="gate-section">
+            <p>> [GENESIS HUNT] ACTIVE: <span id="genesis-count" style="font-weight: bold;">0</span>/5 PIONEERS VERIFIED</p>
+            <p style="font-size: 0.8rem;">[ACTION] ENTER PHASE 2 VERIFICATION KEY:</p>
+            <input type="text" id="pioneerKeyInput" placeholder="BZR-XXXX-XXXX-XXXX">
+            <button onclick="verifyPioneerKey()">VERIFY KEY</button>
+            <div id="meshTerminal">SYSTEM IDLE...</div>
+        </div>
+
+        <div class="gate-section">
+            <p>> [AMBASSADOR] MERCHANT DIRECTORY AUDIT</p>
+            <button onclick="searchMerchants()">SCAN MERCHANT DATABASE</button>
+            <div id="searchOutput">READY FOR SCAN...</div>
+        </div>
+
+        <button onclick="pioneerHandshake()" style="background: transparent; color: var(--bazaar-green); border: 1px solid var(--bazaar-green); width: 100%;">
+            PI NETWORK AUTHENTICATION (SANDBOX)
         </button>
     </div>
 
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    <script>
-        Pi.init({ version: "2.0", sandbox: true }); 
-
-        async function pioneerHandshake() {
-    console.log("[MESH-SCAN] Initiating Multi-Stage Handshake...");
-    try {
-        const scopes = ['username', 'payments'];
-        const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
-        const username = auth.user.username;
-        console.log(`> PIONEER DETECTED: ${username}`);
-
-        const payment = Pi.createPayment({
-            amount: 0.01, 
-            memo: "BZR_GENESIS_VERIFICATION",
-            metadata: { type: "academy_handshake", pioneer_id: username }
-        }, {
-            // PHASE 1: SERVER APPROVAL
-            onReadyForServerApproval: async function(paymentId) {
-                console.log(`[GATE 1] Requesting Approval for: ${paymentId}`);
-                await fetch('http://localhost:3000/approve-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ paymentId: paymentId })
-                });
-            },
-            // PHASE 2: LEDGER COMPLETION
-            onReadyForServerCompletion: async function(paymentId, txid) {
-                console.log(`[GATE 2] Handshake Verified! TXID: ${txid}`);
-                const record = await fetch('http://localhost:3000/complete-handshake', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: username, txid: txid })
-                });
-                
-                if (record.ok) {
-                    alert(`WELCOME REAL PIONEER ${username}.\nYour TXID ${txid} is now Hard-Coded in the Genesis Ledger.`);
-                }
-            },
-            onCancel: function(paymentId) { console.warn("HANDSHAKE ABORTED."); },
-            onError: function(error, payment) { console.error("MESH ERROR:", error); }
-        });
-    } catch (err) {
-        console.error("AUTHENTICATION FAILED:", err);
-    }
-}
-
-        function onIncompletePaymentFound(payment) {
-            console.log("STAT: Incomplete payment detected in buffer.", payment);
-        }
-
-        /* BAZAAR_APP_V1: Live Ledger Polling 
-   Domain: Neo Protocol (100% Focus)
-*/
-async function updateGenesisCount() {
-    try {
-        const response = await fetch('http://localhost:3000/genesis-status');
-        const data = await response.json();
-        
-        // Target the [GENESIS HUNT] text element
-        const huntText = document.querySelector('#genesis-gate p');
-        huntText.innerHTML = `> [GENESIS HUNT] ACTIVE: ${data.count}/5 PIONEERS VERIFIED`;
-        
-        if (data.count >= 5) {
-            huntText.style.color = "#00ff41"; // Final Green for DAO Ignition
-            console.log("[MESH-SCAN] Genesis Hunt Complete. Ignition Authorized.");
-        }
-    } catch (err) {
-        console.warn("[PEER AUDITOR] Ledger unreachable. Retrying sync...");
-    }
-}
-
-// Start polling every 30 seconds
-setInterval(updateGenesisCount, 30000);
-updateGenesisCount(); // Initial sync on load
-    </script>
-
     <footer>
         <p>&copy; 2026 Project Bazaar DAO | Master Node: X570-Taichi</p>
-        <p>System Audited by: <strong>Bazaar Tech (Peer Auditor)</strong></p>
-        <p>Status: <span id="uptime-shield" style="color:#00ff41;">92% Uptime Shield Active</span></p>
+        <p>System Audited by: <strong>Bazaar Tech</strong> | Status: <span style="color:var(--bazaar-green);" class="blink">92% Uptime Shield Active</span></p>
     </footer>
 
-    <script src="js/main.js"></script>
-    <script src="js/auth_logic.js"></script>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script>
+        Pi.init({ version: "2.0", sandbox: true });
+
+        // --- 1. VERIFY KEY (PORT 3001) ---
+        async function verifyPioneerKey() {
+            const key = document.getElementById('pioneerKeyInput').value.trim();
+            const term = document.getElementById('meshTerminal');
+            term.innerHTML = "RUNNING MESH-SCAN...";
+            
+            try {
+                const res = await fetch('http://192.168.8.100:3001/api/verify-pioneer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pioneerKey: key })
+                });
+                const data = await res.json();
+                if (res.ok && data.mesh_clearance) {
+                    term.style.color = "lime";
+                    term.innerHTML = `[SYNC] ${data.message} Rerouting...`;
+                    setTimeout(() => { window.location.href = "../02_Mainnet/index.html"; }, 1500);
+                } else {
+                    term.style.color = "red";
+                    term.innerHTML = `[403] ${data.message}`;
+                }
+            } catch (e) {
+                term.style.color = "red";
+                term.innerHTML = "[CRITICAL] PORT 3001 UNREACHABLE.";
+            }
+        }
+
+        // --- 2. MERCHANT SEARCH (PORT 3001) ---
+        async function searchMerchants() {
+            const output = document.getElementById('searchOutput');
+            output.innerHTML = "ACCESSING J: DRIVE VAULT...";
+            try {
+                const res = await fetch('http://192.168.8.100:3001/api/search-merchants');
+                const data = await res.json();
+                output.innerHTML = `[FOUND] ${data.length} Merchants Verified:<br>` + 
+                                   data.map(m => `> ${m.pioneer_name} [${m.category}] - ${m.status}`).join('<br>');
+            } catch (e) {
+                output.innerHTML = "[ERROR] Economic Database Offline.";
+            }
+        }
+
+        // --- 3. PI SDK AUTH ---
+        async function pioneerHandshake() {
+            console.log("[MESH-SCAN] Initiating Handshake...");
+            try {
+                const auth = await Pi.authenticate(['username', 'payments'], (p) => console.log("Incomplete:", p));
+                alert(`Pioneer Detected: ${auth.user.username}`);
+            } catch (err) { console.error(err); }
+        }
+
+        // --- 4. GENESIS COUNT (PORT 3001) ---
+        async function updateGenesisCount() {
+            try {
+                const res = await fetch('http://192.168.8.100:3001/genesis-status');
+                const data = await res.json();
+                document.getElementById('genesis-count').innerText = data.count;
+            } catch (err) { console.warn("[BAZAAR TECH] Ledger Sync Failed."); }
+        }
+
+        setInterval(updateGenesisCount, 15000);
+        updateGenesisCount();
+    </script>
 </body>
 </html>

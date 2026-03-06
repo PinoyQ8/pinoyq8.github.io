@@ -1,0 +1,4 @@
+merchant_id,pioneer_name,category,location,status,pinet_url
+BZR-V001,Juan_Pioneer,Retail,Digital,VERIFIED,pi://bazaar.pinet/store1
+BZR-V002,Amal_Pioneer,Service,Kuwait,VERIFIED,pi://bazaar.pinet/store2
+BZR-V003,Joseph_Pioneer,Tech,Manila,VERIFIED,pi://bazaar.pinet/store3

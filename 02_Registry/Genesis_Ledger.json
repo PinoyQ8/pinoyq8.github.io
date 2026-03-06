@@ -2,8 +2,20 @@
     {
         "uid": "Genesis-001-Test",
         "pioneer": "Real_Pioneer_Alpha",
-        "role": "Elder Candidate",
+        "role": "Council of Elders",
         "points": 100,
-        "server_verified_at": "2026-03-03T20:50:12.420Z"
+        "server_verified_at": "2026-03-03T20:50:12.420Z",
+        "governance_clearance": "LEVEL_01",
+        "promoted_at": "2026-03-03T21:16:16.540Z"
+    },
+    {
+        "uid": "Treasury-Genesis-001",
+        "pioneer": "Bazaar_Founder",
+        "role": "Command Center",
+        "action": "MAINNET_UNLOCK",
+        "treasury_pi": 218.34,
+        "server_verified_at": "2026-03-06T23:00:00.000+03:00",
+        "governance_clearance": "MAXIMUM",
+        "status": "SECURED_ON_X570"
     }
 ]
