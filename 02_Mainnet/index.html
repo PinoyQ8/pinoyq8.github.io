@@ -107,23 +107,27 @@
 
 <script>
     async function syncMainnet() {
-        const log = document.getElementById('mainnetLog');
-        try {
-            const res = await fetch('ngrok http 3001', {
-    headers: {
-        "ngrok-skip-browser-warning": "69420"
+    const log = document.getElementById('mainnetLog');
+    try {
+        // REPLACE THE URL BELOW WITH YOUR ACTUAL NGROK LINK FROM THE TERMINAL
+        const res = await fetch('https://your-unique-id.ngrok-free.app/api/pioneers', {
+            headers: {
+                "ngrok-skip-browser-warning": "69420"
+            }
+        });
+        
+        const data = await res.json();
+        
+        // Update the UI with the data from your Node.js/J: Drive
+        document.getElementById('pioneerCount').innerText = data.count + " / 100";
+        log.innerHTML += `<br>[SYNC] Ledger verified. ${data.count} pioneers found in vault.`;
+        log.scrollTop = log.scrollHeight;
+        
+    } catch (e) {
+        log.innerHTML += `<br>[ERROR] Registry Unreachable. Check ngrok/PM2 status...`;
+        log.scrollTop = log.scrollHeight;
     }
-});
-            const data = await res.json();
-            document.getElementById('pioneerCount').innerText = data.count + " / 100";
-            log.innerHTML += `<br>[SYNC] Ledger verified. ${data.count} pioneers found in vault.`;
-            // Auto-scroll the log
-            log.scrollTop = log.scrollHeight;
-        } catch (e) {
-            log.innerHTML += `<br>[ERROR] Registry Unreachable. Reconnecting...`;
-            log.scrollTop = log.scrollHeight;
-        }
-    }
+}
 
     function logout() {
         window.location.href = "../01_Academy/index.html";
