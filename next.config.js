@@ -1,5 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 1. GATEWAY REWRITES: Redirects the Pi Crawler to the V23 route.ts logic
+  async rewrites() {
+    return [
+      {
+        source: '/validation-key.txt',
+        destination: '/api/v23/sync', 
+      },
+    ];
+  },
+
+  // 2. SECURITY HEADERS: Your existing CORS MESH protocol
   async headers() {
     return [
       {
@@ -15,4 +26,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig; // Change from module.exports to export default
+export default nextConfig;
