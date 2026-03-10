@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bazaar Mainnet | Inner Vault</title>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <style>
         :root {
             --bazaar-green: #00ff41;
@@ -17,15 +19,17 @@
             color: var(--bazaar-green);
             font-family: 'Courier New', monospace;
             margin: 0;
-            padding: 20px;
+            padding: 10px; /* Adjusted for S23 Screen */
+            overflow-x: hidden;
         }
 
         .mainnet-container {
             max-width: 1200px;
             margin: 0 auto;
             border: 2px solid var(--bazaar-green);
-            padding: 20px;
+            padding: 15px;
             box-shadow: var(--mesh-glow);
+            background: rgba(0,0,0,0.9);
         }
 
         .header-bar {
@@ -34,36 +38,50 @@
             border-bottom: 1px solid var(--bazaar-green);
             padding-bottom: 10px;
             margin-bottom: 20px;
+            font-size: 0.8rem;
         }
 
         .stat-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
             margin-bottom: 30px;
         }
 
         .stat-card {
             border: 1px solid var(--bazaar-green);
-            padding: 15px;
+            padding: 10px;
             background: rgba(0, 255, 65, 0.05);
             text-align: center;
         }
 
-        .stat-value { font-size: 1.5rem; color: var(--bazaar-gold); font-weight: bold; }
+        .stat-value { font-size: 1.2rem; color: var(--bazaar-gold); font-weight: bold; }
 
         .terminal-log {
             background: #000;
             border: 1px solid var(--bazaar-dim);
             padding: 15px;
-            height: 200px;
+            height: 250px;
             overflow-y: auto;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             border-left: 4px solid var(--bazaar-gold);
+            line-height: 1.4;
+        }
+
+        .pioneer-info {
+            color: var(--bazaar-gold);
+            border: 1px dashed var(--bazaar-gold);
+            padding: 5px;
+            margin-bottom: 15px;
+            font-size: 0.75rem;
+            text-align: center;
         }
 
         .blink { animation: blinker 2s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
+        
+        button { font-family: 'Courier New', monospace; transition: 0.3s; }
+        button:active { transform: scale(0.95); opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -71,7 +89,11 @@
 <div class="mainnet-container">
     <div class="header-bar">
         <div>[BZR-MAINNET] v23.1-GENESIS</div>
-        <div class="blink">● SYSTEM ONLINE</div>
+        <div class="blink" id="status-light">● SYSTEM ONLINE</div>
+    </div>
+
+    <div id="pioneerIdentity" class="pioneer-info">
+        SCANNING PIONEER IDENTITY...
     </div>
 
     <div class="stat-grid">
@@ -80,11 +102,11 @@
             <div id="pioneerCount" class="stat-value">--</div>
         </div>
         <div class="stat-card">
-            <div>MESH CLEARANCE</div>
-            <div class="stat-value" style="color: var(--bazaar-green);">LEVEL 1</div>
+            <div>MESH LEVEL</div>
+            <div class="stat-value" style="color: var(--bazaar-green);">V23</div>
         </div>
         <div class="stat-card">
-            <div>UPTIME SHIELD</div>
+            <div>UPTIME</div>
             <div class="stat-value">92%</div>
         </div>
     </div>
@@ -96,7 +118,10 @@
         [SYSTEM] Awaiting J: Drive Ledger Sync...
     </div>
 
-    <button onclick="logout()" style="margin-top:20px; background:transparent; color:red; border:1px solid red; padding:10px; cursor:pointer;">DISCONNECT FROM MESH</button>
+    <div style="display:flex; gap:10px; margin-top:20px;">
+        <button onclick="initPiAuth()" style="flex:1; background:var(--bazaar-green); color:black; border:none; padding:12px; font-weight:bold; cursor:pointer;">RE-SYNC WALLET</button>
+        <button onclick="logout()" style="flex:1; background:transparent; color:red; border:1px solid red; padding:12px; cursor:pointer;">DISCONNECT</button>
+    </div>
 </div>
 
 <footer>
@@ -106,38 +131,61 @@
 </footer>
 
 <script>
-    async function syncMainnet() {
     const log = document.getElementById('mainnetLog');
-    try {
-        // EXACT FIX: Replace the placeholder below with your real ngrok link!
-        // It should look something like: https://1234-abcd.ngrok-free.app/api/pioneers
-        const res = await fetch('https://hypercoagulable-nondistortingly-valarie.ngrok-free.dev/api/pioneers', {
-            headers: {
-                "ngrok-skip-browser-warning": "69420"
-            }
-        });
-        
-        const data = await res.json();
-        
-        // Update the UI with the data from your Node.js/J: Drive
-        document.getElementById('pioneerCount').innerText = data.count + " / 100";
-        log.innerHTML += `<br>[SYNC] Ledger verified. ${data.count} pioneers found in vault.`;
-        log.scrollTop = log.scrollHeight;
-        
-    } catch (e) {
-        log.innerHTML += `<br>[ERROR] Registry Unreachable. Check ngrok/PM2 status...`;
-        log.scrollTop = log.scrollHeight;
+    
+    // INITIALIZE PI SDK
+    async function initPiAuth() {
+        try {
+            const Pi = window.Pi;
+            Pi.init({ version: "2.0", sandbox: false }); // sandbox: false for Mainnet
+
+            const scopes = ['payments', 'username', 'wallet_address'];
+            
+            function onIncompletePaymentFound(payment) {
+                log.innerHTML += `<br>[WARN] Incomplete transaction found: ${payment.identifier}`;
+            };
+
+            const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
+            
+            document.getElementById('pioneerIdentity').innerText = `IDENTIFIED: ${auth.user.username.toUpperCase()}`;
+            log.innerHTML += `<br>[AUTH] Pioneer ${auth.user.username} successfully synced to Mesh.`;
+            
+        } catch (err) {
+            log.innerHTML += `<br>[ERROR] Pi SDK Handshake Failed. Run inside Pi Browser!`;
+            console.error(err);
+        }
     }
-}
+
+    async function syncMainnet() {
+        try {
+            const res = await fetch('https://hypercoagulable-nondistortingly-valarie.ngrok-free.dev/api/pioneers', {
+                headers: { "ngrok-skip-browser-warning": "69420" }
+            });
+            
+            if (!res.ok) throw new Error('Bridge Closed');
+            
+            const data = await res.json();
+            document.getElementById('pioneerCount').innerText = data.count + " / 100";
+            log.innerHTML += `<br>[SYNC] Ledger verified at ${new Date().toLocaleTimeString()}.`;
+            log.scrollTop = log.scrollHeight;
+            
+        } catch (e) {
+            log.innerHTML += `<br>[ERROR] Bridge Failure. Check X570/Ngrok Pulse...`;
+            document.getElementById('status-light').innerText = "○ SYSTEM OFFLINE";
+            document.getElementById('status-light').style.color = "red";
+        }
+    }
 
     function logout() {
         window.location.href = "../01_Academy/index.html";
     }
 
-    // Refresh every 10 seconds
-    setInterval(syncMainnet, 10000);
-    // Initial call
-    syncMainnet();
+    // STARTUP
+    window.onload = () => {
+        initPiAuth();
+        syncMainnet();
+        setInterval(syncMainnet, 15000); // 15s interval to save bandwidth
+    };
 </script>
 
 </body>
