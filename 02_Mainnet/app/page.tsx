@@ -1,61 +1,57 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
 
-export default function MainnetHome() {
+export default function DiagnosticPage() {
+  const [status, setStatus] = useState("AWAITING_COMMAND");
+  const [log, setLog] = useState<string[]>([]);
+
+  const addLog = (msg: string) => setLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
+
+  const forceHandshake = async () => {
+    setStatus("STRIKING...");
+    addLog("Initiating manual handshake...");
+
+    try {
+      const Pi = (window as any).Pi;
+      if (!Pi) {
+        addLog("❌ [CRITICAL] window.Pi is NULL. SDK not injected by Browser.");
+        setStatus("FAILURE");
+        return;
+      }
+
+      addLog("✅ SDK found. Initializing v2.0...");
+      await Pi.init({ version: "2.0", sandbox: false });
+      
+      addLog("Authenticating Pioneer...");
+      const auth = await Pi.authenticate(['username', 'payments'], (p: any) => {});
+      
+      addLog(`✅ SUCCESS: Connected as ${auth.user.username}`);
+      setStatus("SOVEREIGN");
+    } catch (err: any) {
+      addLog(`❌ FRACTURE: ${err.message || JSON.stringify(err)}`);
+      setStatus("ERROR");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black font-mono flex flex-col items-center justify-center p-4 border-4 border-double border-gray-900">
-      <div className="max-w-2xl w-full space-y-8 text-center">
-        {/* LOGO SECTOR */}
-        <div className="relative inline-block">
-          <div className="w-16 h-16 border-2 border-cyan-600 flex items-center justify-center mx-auto mb-4 rotate-45 group-hover:rotate-90 transition-transform duration-500">
-            <span className="text-cyan-600 text-2xl -rotate-45 font-bold">B</span>
-          </div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-600 animate-pulse"></div>
-        </div>
+    <div style={{ backgroundColor: '#000', color: '#0f0', padding: '20px', minHeight: '100vh', fontFamily: 'monospace' }}>
+      <h1>BZR_DIAGNOSTIC_v1.0</h1>
+      <hr style={{ borderColor: '#0f0' }} />
+      
+      <div style={{ margin: '20px 0' }}>
+        <p>SYSTEM_STATUS: <span style={{ color: status === 'SOVEREIGN' ? '#0f0' : '#f00' }}>[{status}]</span></p>
+        <button 
+          onClick={forceHandshake}
+          style={{ padding: '15px', backgroundColor: '#0f0', color: '#000', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+        >
+          FORCE SDK HANDSHAKE
+        </button>
+      </div>
 
-        {/* IDENTITY ANCHOR */}
-        <div className="space-y-2">
-          <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter uppercase">
-            Project Bazaar <span className="text-cyan-600">Mainnet</span>
-          </h1>
-          <p className="text-[10px] text-gray-500 tracking-[0.5em] uppercase">
-            Decentralized Autonomous Organization // Node Alpha
-          </p>
-        </div>
-
-        {/* STATUS LEDGER */}
-        <div className="border border-gray-800 p-6 bg-gray-950/50 backdrop-blur-sm">
-          <div className="flex justify-between text-[10px] mb-4 border-b border-gray-900 pb-2">
-            <span className="text-gray-500 uppercase">System Status:</span>
-            <span className="text-green-500 font-bold uppercase">100% Green / Sovereign</span>
-          </div>
-          
-          <p className="text-gray-400 text-sm leading-relaxed mb-6">
-            Establishing the MESH Protocol for Real Pioneers. This node is hard-coded for secure commerce 
-            within the Pi Network Ecosystem. 47dec Validation Key Engaged.
-          </p>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Link 
-              href="/admin" 
-              className="border border-cyan-900 p-3 text-[10px] text-cyan-600 hover:bg-cyan-900 hover:text-white transition-all uppercase font-bold"
-            >
-              Access Ledger
-            </Link>
-            <div className="border border-gray-800 p-3 text-[10px] text-gray-600 uppercase flex items-center justify-center">
-              March 12 Ignition
-            </div>
-          </div>
-        </div>
-
-        {/* FOOTER METADATA */}
-        <div className="pt-8">
-          <p className="text-[8px] text-gray-700 uppercase tracking-widest">
-            X570 Taichi Workstation // C: Drive Freedom Verified
-          </p>
-        </div>
+      <div style={{ backgroundColor: '#111', padding: '10px', border: '1px solid #333' }}>
+        <p style={{ color: '#555' }}>--- TELEMETRY_LOG ---</p>
+        {log.map((line, i) => <p key={i} style={{ margin: '2px 0', fontSize: '12px' }}>{line}</p>)}
       </div>
     </div>
   );
