@@ -14,12 +14,18 @@ export default function ProductCard({ product }: { product: Product }) {
   const { userData } = usePiAuth();
 
   const handlePayment = async () => {
+    // 1. GAIN SDK ACCESS
+    const Pi = (window as any).Pi;
+    
+    if (!Pi) {
+      alert("![CRITICAL] MESH-SCAN: SDK not detected. Ensure you are inside the Pi Browser app.");
+      return;
+    }
+
     try {
-      const Pi = (window as any).Pi;
-      if (!Pi) {
-        alert("![CRITICAL] Pi SDK not found on S23 node.");
-        return;
-      }
+      // 2. FORCE HANDSHAKE (Solves the 'Failed' error by ensuring init is active)
+      console.log("[SYNC] Manually igniting SDK for Strike...");
+      await Pi.init({ version: "2.0", sandbox: false });
 
       const paymentData = {
         amount: product.price_in_pi,
@@ -29,12 +35,11 @@ export default function ProductCard({ product }: { product: Product }) {
 
       const callbacks = {
         onReadyForServerApproval: (paymentId: string) => {
-          console.log(`[OK] Payment ${paymentId} waiting for server pulse...`);
+          console.log(`[OK] Payment ${paymentId} awaiting server pulse...`);
         },
         onReadyForServerCompletion: async (paymentId: string, txid: string) => {
           console.log("![SYNC] Transaction Detected. Striking X570 Ledger...");
           
-          // Send the receipt to your J: Drive server.js via the Ngrok Tunnel
           const response = await fetch('https://hypercoagulable-nondistortingly-valarie.ngrok-free.dev/api/payments/complete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -51,14 +56,18 @@ export default function ProductCard({ product }: { product: Product }) {
           }
         },
         onCancel: (paymentId: string) => console.log("![ALERT] Pioneer cancelled strike."),
-        onError: (error: Error, paymentId?: string) => console.error("![CRITICAL] Payment Fracture:", error),
+        onError: (error: Error, paymentId?: string) => {
+          console.error("![CRITICAL] Payment Fracture:", error);
+          alert(`Strike Failure: ${error.message}`);
+        },
       };
 
-      // ACTIVATE THE S23 BIOMETRIC WALLET
+      // 3. TRIGGER BIOMETRIC WALLET
       await Pi.createPayment(paymentData, callbacks);
       
     } catch (err) {
       console.error("![ERROR] Payment Adjudicator failed to ignite:", err);
+      alert("MESH-SCAN: Manual Handshake Interrupted. Verify S23 Signal.");
     }
   };
 
@@ -68,22 +77,30 @@ export default function ProductCard({ product }: { product: Product }) {
       padding: '20px',
       margin: '10px 0',
       backgroundColor: 'rgba(6, 182, 212, 0.05)',
-      fontFamily: 'monospace'
+      fontFamily: 'monospace',
+      position: 'relative'
     }}>
-      <h3 style={{ color: '#06b6d4', marginTop: 0 }}>{product.name.toUpperCase()}</h3>
-      <p style={{ color: '#a5f3fc', fontSize: '0.9rem' }}>{product.description}</p>
+      <h3 style={{ color: '#06b6d4', marginTop: 0, fontSize: '1.2rem' }}>{product.name.toUpperCase()}</h3>
+      <p style={{ color: '#a5f3fc', fontSize: '0.85rem', lineHeight: '1.4' }}>{product.description}</p>
+      
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
-        <span style={{ color: '#22d3ee', fontWeight: 'bold' }}>{product.price_in_pi} π</span>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ color: '#22d3ee', fontWeight: 'bold', fontSize: '1.1rem' }}>{product.price_in_pi} π</span>
+          <span style={{ color: '#164e63', fontSize: '10px' }}>UNIT PRICE / PI-MAINNET</span>
+        </div>
+        
         <button 
           onClick={handlePayment}
           style={{
             backgroundColor: '#06b6d4',
             color: 'black',
-            padding: '8px 16px',
+            padding: '10px 20px',
             border: 'none',
-            fontWeight: 'bold',
+            fontWeight: '900',
             cursor: 'pointer',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            boxShadow: '0 0 10px rgba(6, 182, 212, 0.3)'
           }}
         >
           Execute Strike

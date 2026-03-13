@@ -19,10 +19,10 @@
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "lucide-react": "latest",
-    "next": "latest",
+    "next": "^16.1.6",
     "postcss": "latest",
-    "react": "latest",
-    "react-dom": "latest",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "stellar-sdk": "^13.3.0",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "latest"
