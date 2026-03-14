@@ -6,26 +6,24 @@ export default function Phase10Strike() {
   const [isStriking, setIsStriking] = useState(false);
 
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = "https://sdk.minepi.com/pi-sdk.js";
-    script.async = true;
-    script.onload = () => {
-      // Local Casting to bypass global type conflicts
+    const checkSDK = () => {
       const piSDK = (window as any).Pi;
       if (piSDK) {
         piSDK.init({ version: '2.0', sandbox: true });
         console.log('[MESH] Academy SDK Initialized.');
         setSdkReady(true);
+      } else {
+        // Retry logic if script defer is slow
+        setTimeout(checkSDK, 500);
       }
     };
-    document.body.appendChild(script);
+    checkSDK();
   }, []);
 
   const triggerHandshake = async () => {
-    // 1. DYNAMIC CASTING: Bypasses the "Subsequent property" error
     const piSDK = (window as any).Pi;
 
-    if (typeof window === "undefined" || !piSDK || !sdkReady) {
+    if (!piSDK || !sdkReady) {
       alert('ADJUDICATOR ALERT: SDK Offline.');
       return;
     }
@@ -36,8 +34,6 @@ export default function Phase10Strike() {
       const auth = await piSDK.authenticate(['payments'], async (payment: any) => {
         console.log('[MESH] Incomplete payment found.');
       });
-
-      console.log(`[MESH] Authenticated: ${auth.user.username}`);
 
       piSDK.createPayment({
         amount: 1,
@@ -93,8 +89,8 @@ export default function Phase10Strike() {
         }}
       >
         {isStriking ? 'TRANSMITTING...' : (sdkReady ? 'EXECUTE STEP #10' : 'LOADING SDK...')}
-        // HEARTBEAT: [March 14 // 17:28 AST] - Hypercoag Clear.
       </button>
+      {/* HEARTBEAT: [March 14 // 17:28 AST] - Hypercoag Clear. */}
     </div>
   );
 }
