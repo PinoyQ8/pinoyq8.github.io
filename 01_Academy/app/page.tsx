@@ -93,6 +93,7 @@ export default function Phase10Strike() {
         }}
       >
         {isStriking ? 'TRANSMITTING...' : (sdkReady ? 'EXECUTE STEP #10' : 'LOADING SDK...')}
+        // HEARTBEAT: [March 14 // 17:28 AST] - Hypercoag Clear.
       </button>
     </div>
   );
