@@ -1,1 +1,1 @@
-export default function Home() { return (<main style={{background:'black',color:'#0f0',padding:'50px',fontFamily:'monospace'}}><h1>BAZAAR ACADEMY NODE ACTIVE</h1><p>Pi Verification Payload Engaged.</p></main>); }
+export default function Home() { return <main style={{background:'black',color:'#0f0',padding:'50px',fontFamily:'monospace'}}><h1>BAZAAR ACADEMY NODE ACTIVE</h1><p>Signature: BZR-NODE-ALPHA</p></main> }
