@@ -1,15 +1,29 @@
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "BZR Academy Node",
+  // 1. THIS IS THE CRITICAL LINE
+  // REPLACE 'PASTE_YOUR_CODE_HERE' with the code from Step 3 of the Portal.
+  verification: {
+    other: {
+      "pi-verification": ["PASTE_YOUR_CODE_HERE"],
+    },
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <head>
-        {/* 1. DOMAIN CLAIM ANCHOR */}
-        {/* Replace 'YOUR_VERIFICATION_CODE' with the string from Step 3 of the Portal */}
-        <meta name="pi-verification" content="YOUR_VERIFICATION_CODE_FROM_PORTAL" />
-        
-        {/* 2. SOVEREIGN SDK LOAD (Managed here globally) */}
+        {/* FALLBACK INJECTION: Bot-Visible Tag */}
+        <meta name="pi-verification" content="PASTE_YOUR_CODE_HERE" />
         <script src="https://sdk.minepi.com/pi-sdk.js" defer></script>
       </head>
-      <body style={{ backgroundColor: 'black', margin: 0, color: 'white' }}>
+      <body style={{ backgroundColor: "black", margin: 0 }}>
         {children}
       </body>
     </html>
